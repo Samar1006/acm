@@ -1,0 +1,184 @@
+{
+  "title": "Count Primes Below N",
+  "description": "Given an integer `n`, return how many prime numbers are **strictly less than** `n`.\n\nA prime number is an integer greater than 1 whose only positive divisors are 1 and itself.\n\n### Examples\n\n| `n` | Primes below `n` | Result |\n| --- | --- | --- |\n| `10` | 2, 3, 5, 7 | `4` |\n| `3` | 2 | `1` |\n| `2` | none | `0` |\n\n### Constraints\n\n- `0 <= n <= 100000`\n- The value is passed as a function argument. Do not read from standard input.\n\n### Notes\n\nTesting every candidate against every smaller number is too slow for the\nlargest cases. Consider a sieve, which marks composite numbers in one pass\ninstead of re-testing each candidate.\n",
+  "reference": "int count_primes(int n) {\n    if (n < 3) {\n        return 0;\n    }\n    std::vector<bool> is_prime(n, true);\n    is_prime[0] = false;\n    is_prime[1] = false;\n    for (long long i = 2; i * i < n; ++i) {\n        if (!is_prime[i]) {\n            continue;\n        }\n        for (long long j = i * i; j < n; j += i) {\n            is_prime[j] = false;\n        }\n    }\n    int count = 0;\n    for (int i = 2; i < n; ++i) {\n        if (is_prime[i]) {\n            ++count;\n        }\n    }\n    return count;\n}\n",
+  "template": "int count_primes(int n) {\n    // Return the number of primes strictly below n.\n    return 0;\n}\n",
+  "tests": [
+    {
+      "index": 0,
+      "input": {
+        "name": "count_primes",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 0
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 0
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 1,
+      "input": {
+        "name": "count_primes",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 2
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 0
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 2,
+      "input": {
+        "name": "count_primes",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 3
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 1
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 3,
+      "input": {
+        "name": "count_primes",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 10
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 4
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 4,
+      "input": {
+        "name": "count_primes",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 100
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 25
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 5,
+      "input": {
+        "name": "count_primes",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 1000
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 168
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 6,
+      "input": {
+        "name": "count_primes",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 10000
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 1229
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 7,
+      "input": {
+        "name": "count_primes",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 100000
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 9592
+        }
+      },
+      "max_fuel": null
+    }
+  ]
+}
