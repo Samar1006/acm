@@ -201,7 +201,7 @@ validate_repository() {
   revision="$(git -C "$REPO_DIR" rev-parse --verify HEAD)" || die "could not determine source revision"
   [[ "$revision" =~ ^[0-9a-f]{40}$ ]] || die "source revision is not a full SHA-1"
   while IFS= read -r -d '' tracked; do
-    [[ "$tracked" != /* && "$tracked" != *'..'* ]] || die "unsafe tracked path: $tracked"
+    [[ "$tracked" != /* && "$tracked" != '..' && "$tracked" != '../'* && "$tracked" != *'/..' && "$tracked" != *'/../'* ]] || die "unsafe tracked path: $tracked"
     relative="$REPO_DIR/$tracked"
     parent="$(dirname -- "$relative")"
     assert_trusted_ancestors "$relative"
