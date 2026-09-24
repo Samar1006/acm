@@ -115,6 +115,10 @@ networks:
     ipam:
       config:
         # Private /24 reserved for the Caddy-to-server trust boundary.
+        # Caddy holds the static 172.30.0.2. Dynamic allocation (the server
+        # starts first because Caddy depends on it) must draw from a range that
+        # excludes that address, or the server takes .2 and Caddy cannot start.
         - subnet: 172.30.0.0/24
+          ip_range: 172.30.0.128/25
   runner:
     internal: true
