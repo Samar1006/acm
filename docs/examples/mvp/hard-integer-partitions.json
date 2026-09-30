@@ -1,0 +1,184 @@
+{
+  "title": "Integer Partitions",
+  "description": "A *partition* of a non-negative integer `n` is a way of writing `n` as a sum of\npositive integers, where the order of the terms does not matter.\n\nGiven `n`, return the number of distinct partitions of `n`.\n\n### Examples\n\n`n = 5` has `7` partitions:\n\n```text\n5\n4 + 1\n3 + 2\n3 + 1 + 1\n2 + 2 + 1\n2 + 1 + 1 + 1\n1 + 1 + 1 + 1 + 1\n```\n\nBy convention `n = 0` has exactly one partition: the empty sum. So the answer\nfor `0` is `1`.\n\n| `n` | Result |\n| --- | --- |\n| `0` | `1` |\n| `5` | `7` |\n| `10` | `42` |\n| `50` | `204226` |\n\n### Constraints\n\n- `0 <= n <= 100`\n- The value is passed as a function argument. Do not read from standard input.\n- The answer always fits in a signed 32-bit integer. For `n = 100` it is `190569292`.\n\n### Notes\n\nThe count grows very quickly, so enumerating the partitions one by one will not\nfinish. Build the answer up instead: think about how many partitions of each\nvalue you can form when you are only allowed to use parts up to a given size,\nthen allow one larger part at a time.\n",
+  "reference": "int count_partitions(int n) {\n    std::vector<int> ways(n + 1, 0);\n    ways[0] = 1;\n    for (int part = 1; part <= n; ++part) {\n        for (int value = part; value <= n; ++value) {\n            ways[value] += ways[value - part];\n        }\n    }\n    return ways[n];\n}\n",
+  "template": "int count_partitions(int n) {\n    // Return the number of distinct partitions of n.\n    return 0;\n}\n",
+  "tests": [
+    {
+      "index": 0,
+      "input": {
+        "name": "count_partitions",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 0
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 1
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 1,
+      "input": {
+        "name": "count_partitions",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 1
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 1
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 2,
+      "input": {
+        "name": "count_partitions",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 2
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 2
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 3,
+      "input": {
+        "name": "count_partitions",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 5
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 7
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 4,
+      "input": {
+        "name": "count_partitions",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 10
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 42
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 5,
+      "input": {
+        "name": "count_partitions",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 50
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 204226
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 6,
+      "input": {
+        "name": "count_partitions",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 80
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 15796476
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 7,
+      "input": {
+        "name": "count_partitions",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 100
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 190569292
+        }
+      },
+      "max_fuel": null
+    }
+  ]
+}

@@ -1,0 +1,162 @@
+{
+  "title": "Sum of Multiples of 3 or 5",
+  "description": "Given an integer `n`, return the sum of every positive integer **strictly below** `n` that is a multiple of 3 or a multiple of 5.\n\nCount each qualifying number once, even when it is a multiple of both 3 and 5.\n\n### Examples\n\n| `n` | Qualifying numbers | Result |\n| --- | --- | --- |\n| `10` | 3, 5, 6, 9 | `23` |\n| `16` | 3, 5, 6, 9, 10, 12, 15 | `60` |\n| `3` | none | `0` |\n\n### Constraints\n\n- `0 <= n <= 1000`\n- The value is passed as a function argument. Do not read from standard input.\n- Return the result from the function.\n",
+  "reference": "int sum_multiples(int n) {\n    int total = 0;\n    for (int i = 1; i < n; ++i) {\n        if (i % 3 == 0 || i % 5 == 0) {\n            total += i;\n        }\n    }\n    return total;\n}\n",
+  "template": "int sum_multiples(int n) {\n    // Return the sum of the multiples of 3 or 5 below n.\n    return 0;\n}\n",
+  "tests": [
+    {
+      "index": 0,
+      "input": {
+        "name": "sum_multiples",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 0
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 0
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 1,
+      "input": {
+        "name": "sum_multiples",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 1
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 0
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 2,
+      "input": {
+        "name": "sum_multiples",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 3
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 0
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 3,
+      "input": {
+        "name": "sum_multiples",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 10
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 23
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 4,
+      "input": {
+        "name": "sum_multiples",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 16
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 60
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 5,
+      "input": {
+        "name": "sum_multiples",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 50
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 543
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 6,
+      "input": {
+        "name": "sum_multiples",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 1000
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 233168
+        }
+      },
+      "max_fuel": null
+    }
+  ]
+}

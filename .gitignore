@@ -2,6 +2,7 @@
 /dist
 .env
 .env.local
+compose.override.yml
 /deploy/.env.production
 /lilith/.env.local
 /lilith/.env.production

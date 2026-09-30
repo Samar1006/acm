@@ -72,8 +72,8 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
-    cpus: "1.0"
-    mem_limit: 512m
+    cpus: "${ACM_SERVER_CPUS:-1.0}"
+    mem_limit: ${ACM_SERVER_MEM_LIMIT:-512m}
 
   ramiel:
     image: acm-ramiel:production
@@ -102,8 +102,8 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
-    cpus: "2.0"
-    mem_limit: 2g
+    cpus: "${ACM_RAMIEL_CPUS:-2.0}"
+    mem_limit: ${ACM_RAMIEL_MEM_LIMIT:-2g}
     pids_limit: 256
 
 volumes:
@@ -115,6 +115,10 @@ networks:
     ipam:
       config:
         # Private /24 reserved for the Caddy-to-server trust boundary.
+        # Caddy holds the static 172.30.0.2. Dynamic allocation (the server
+        # starts first because Caddy depends on it) must draw from a range that
+        # excludes that address, or the server takes .2 and Caddy cannot start.
         - subnet: 172.30.0.0/24
+          ip_range: 172.30.0.128/25
   runner:
     internal: true
