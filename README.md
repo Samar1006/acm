@@ -147,7 +147,7 @@ Use the [production operator guide](deploy/README.md). Production requires a tru
 
 In the submission editor, open **Settings** and enable **Inline code checks** for optional C++/Rust syntax markers. The setting is off by default and stays in local browser storage. Syntax checks do not send source to the API or replace isolated compilation.
 
-Rust submissions currently support scalar `i32` and `i64` arguments and results. See [Rust submission limits](crates/ramiel/README.md#rust-submissions) and [editor diagnostics](docs/editor-diagnostics.md).
+Rust submissions accept the same typed arguments and results as C++ (`i32`/`i64`, `String`, `Vec`, nested vectors). See [Rust submissions](crates/ramiel/README.md#rust-submissions) and [editor diagnostics](docs/editor-diagnostics.md).
 
 ---
 

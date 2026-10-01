@@ -1,4 +1,5 @@
 use axum::{extract::Path, Extension, Json};
+use shared::models::language::RustSignature;
 use sqlx::SqlitePool;
 
 use crate::{auth::Claims, error::ServerError};
@@ -10,19 +11,18 @@ pub async fn rust_template(
     Extension(pool): Extension<SqlitePool>,
     claims: Claims,
 ) -> Result<Json<String>, ServerError> {
-    let (visible,): (bool,) = sqlx::query_as("SELECT visible FROM problems WHERE id = ?")
-        .bind(problem_id)
-        .fetch_one(&pool)
-        .await
-        .map_err(|_| ServerError::NotFound)?;
+    let (visible, template): (bool, String) =
+        sqlx::query_as("SELECT visible, template FROM problems WHERE id = ?")
+            .bind(problem_id)
+            .fetch_one(&pool)
+            .await
+            .map_err(|_| ServerError::NotFound)?;
     if !visible && claims.validate_officer().is_err() {
         return Err(ServerError::NotFound);
     }
-    Ok(Json(
-        crate::run::rust_signature(&pool, problem_id, None)
-            .await?
-            .template(),
-    ))
+    let signature = crate::run::rust_signature(&pool, problem_id, None).await?;
+    let names = RustSignature::parameter_names_from_cpp(&template);
+    Ok(Json(signature.template_with_names(&names)))
 }
 
 pub async fn problem(

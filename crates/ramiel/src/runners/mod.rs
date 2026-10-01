@@ -364,7 +364,7 @@ pub(crate) async fn run_command(
 
         let result = match language {
             Language::Cpp => input.call(&mut store, &instance),
-            Language::Rust => input.call_integers(&mut store, &instance),
+            Language::Rust => input.call_rust(&mut store, &instance),
         };
 
         drop(store);

@@ -186,6 +186,7 @@ async fn compile(
             "--target=wasm32-wasip1",
             "-Copt-level=3",
             "-Cpanic=abort",
+            "-Clink-arg=--export-memory",
             "--error-format=json",
             "wrapper.rs",
             "-o",
