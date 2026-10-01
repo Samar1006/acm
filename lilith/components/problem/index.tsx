@@ -80,13 +80,12 @@ function ProblemEditorWrapper({
                     className="bg-white dark:bg-neutral-900"
                 >
                     <option value="cpp">C++</option>
-                    <option value="rust">Rust (integer signatures)</option>
+                    <option value="rust">Rust</option>
                 </select>
             </label>
             {language === "rust" && (
                 <p className="px-2 text-sm">
-                    Rust standard library only. Arguments and results must be
-                    scalar i32 or i64 values.
+                    Rust standard library only. Cargo crates are not available.
                 </p>
             )}
             {error && (

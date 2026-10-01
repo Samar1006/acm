@@ -89,13 +89,30 @@ result = post("/custom-input/rust", body)
 assert result["Ok"]["result"]["success"], result
 assert "sum = 5" in result["Ok"]["output"], result
 print("standard library custom input passed; fuel:", result["Ok"]["result"]["fuel"])
-for kind, container in [("String", "Single"), ("Int", "List"), ("Int", "Grid"), ("Int", "Graph"), ("Float", "Single")]:
-    body["input"] = call()
-    body["input"]["return_type"] = {kind: container}
-    result = post("/custom-input/rust", body)
-    assert result["Err"]["type"] == "UnsupportedSignature", result
-body["input"] = call()
-body["implementation"] = 'extern crate serde; fn add(a: i32, b: i32) -> i32 { a + b }'
+list_call = {"name": "sum_list", "arguments": [{"Int": {"List": [2, 3, 5]}}], "return_type": {"Int": "Single"}}
+body = {
+    "language": "rust",
+    "problem_id": 1,
+    "user_id": 987654,
+    "implementation": 'fn sum_list(values: Vec<i32>) -> i32 { values.iter().sum() }',
+    "tests": [{"id": 0, "index": 0, "max_fuel": 4, "input": list_call, "expected_output": {"Int": {"Single": 10}}}],
+    "runtime_multiplier": None,
+}
+result = post("/run/rust", body)
+assert result.get("Ok", {}).get("passed"), result
+print("list argument passed; fuel:", result["Ok"]["tests"][0]["fuel"])
+string_call = {"name": "shout", "arguments": [{"String": {"Single": "hi"}}], "return_type": {"String": "Single"}}
+body["implementation"] = 'fn shout(s: String) -> String { s.to_uppercase() }'
+body["tests"] = [{"id": 0, "index": 0, "max_fuel": 4, "input": string_call, "expected_output": {"String": {"Single": "HI"}}}]
+result = post("/run/rust", body)
+assert result.get("Ok", {}).get("passed"), result
+grid_call = {"name": "flatten", "arguments": [{"Int": {"Grid": [[1, 2], [3]]}}], "return_type": {"Int": "List"}}
+body["implementation"] = 'fn flatten(rows: Vec<Vec<i32>>) -> Vec<i32> { rows.into_iter().flatten().collect() }'
+body["tests"] = [{"id": 0, "index": 0, "max_fuel": 4, "input": grid_call, "expected_output": {"Int": {"List": [1, 2, 3]}}}]
+result = post("/run/rust", body)
+assert result.get("Ok", {}).get("passed"), result
+print("string and grid round-trips passed")
+body = {"language": "rust", "problem_id": 1, "user_id": 987654, "reference": cpp, "input": call(), "implementation": 'extern crate serde; fn add(a: i32, b: i32) -> i32 { a + b }', "runtime_multiplier": None}
 assert post("/custom-input/rust", body)["Err"]["type"] == "CompilationError"
 
 
@@ -119,7 +136,7 @@ assert_file_denied(submit(peer_cpp, "cpp", user_id=987655))
 assert submit(rust, user_id=987655)["Ok"]["passed"]
 assert submit(cpp, "cpp", user_id=987655)["Ok"]["passed"]
 print("PASS: compiler reference/peer-file isolation and recovery after access denial")
-print("PASS: sample, i64, wrong output, diagnostics, stale output, fuel, memory, std, custom input, unsupported signatures, and external crate rejection")
+print("PASS: sample, i64, wrong output, diagnostics, stale output, fuel, memory, std, custom input, lists/strings/grids, and external crate rejection")
 
 # Run the committed practice references, not a second copy of their algorithms.
 for problem_id, name in enumerate([
