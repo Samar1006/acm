@@ -1,0 +1,272 @@
+{
+  "title": "Roman to Integer",
+  "description": "Convert the Roman numeral `s` to an integer.\n\n| Symbol | Value |\n| --- | --- |\n| `I` | 1 |\n| `V` | 5 |\n| `X` | 10 |\n| `L` | 50 |\n| `C` | 100 |\n| `D` | 500 |\n| `M` | 1000 |\n\nSymbols are normally written from largest to smallest and added together. Six subtractive pairs are used instead of repeating a symbol four times: `IV` (4), `IX` (9), `XL` (40), `XC` (90), `CD` (400) and `CM` (900).\n\n### Examples\n\n| `s` | Result |\n| --- | --- |\n| `\"III\"` | `3` |\n| `\"LVIII\"` | `58` |\n| `\"MCMXCIV\"` | `1994` |\n\n### Constraints\n\n- `1 <= s.size() <= 15`\n- `s` contains only the characters `I`, `V`, `X`, `L`, `C`, `D` and `M`, and is a valid numeral between 1 and 3999.\n- Inputs are passed as function arguments and the answer is returned from the function. Do not read from standard input or print the result.\n",
+  "reference": "int roman_to_int(string s) {\n    auto value = [](char c) {\n        switch (c) {\n            case 'I': return 1;\n            case 'V': return 5;\n            case 'X': return 10;\n            case 'L': return 50;\n            case 'C': return 100;\n            case 'D': return 500;\n            default: return 1000;\n        }\n    };\n    int total = 0;\n    for (size_t i = 0; i < s.size(); ++i) {\n        int current = value(s[i]);\n        if (i + 1 < s.size() && value(s[i + 1]) > current) {\n            total -= current;\n        } else {\n            total += current;\n        }\n    }\n    return total;\n}\n",
+  "template": "int roman_to_int(string s) {\n    // Return the integer value of the Roman numeral s.\n    return 0;\n}\n",
+  "tests": [
+    {
+      "index": 0,
+      "input": {
+        "name": "roman_to_int",
+        "arguments": [
+          {
+            "String": {
+              "Single": "III"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 3
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 1,
+      "input": {
+        "name": "roman_to_int",
+        "arguments": [
+          {
+            "String": {
+              "Single": "LVIII"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 58
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 2,
+      "input": {
+        "name": "roman_to_int",
+        "arguments": [
+          {
+            "String": {
+              "Single": "MCMXCIV"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 1994
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 3,
+      "input": {
+        "name": "roman_to_int",
+        "arguments": [
+          {
+            "String": {
+              "Single": "IV"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 4
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 4,
+      "input": {
+        "name": "roman_to_int",
+        "arguments": [
+          {
+            "String": {
+              "Single": "IX"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 9
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 5,
+      "input": {
+        "name": "roman_to_int",
+        "arguments": [
+          {
+            "String": {
+              "Single": "MMMCMXCIX"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 3999
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 6,
+      "input": {
+        "name": "roman_to_int",
+        "arguments": [
+          {
+            "String": {
+              "Single": "I"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 1
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 7,
+      "input": {
+        "name": "roman_to_int",
+        "arguments": [
+          {
+            "String": {
+              "Single": "MMXXIV"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 2024
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 8,
+      "input": {
+        "name": "roman_to_int",
+        "arguments": [
+          {
+            "String": {
+              "Single": "CDXLIV"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 444
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 9,
+      "input": {
+        "name": "roman_to_int",
+        "arguments": [
+          {
+            "String": {
+              "Single": "M"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 1000
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 10,
+      "input": {
+        "name": "roman_to_int",
+        "arguments": [
+          {
+            "String": {
+              "Single": "XC"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 90
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 11,
+      "input": {
+        "name": "roman_to_int",
+        "arguments": [
+          {
+            "String": {
+              "Single": "XIV"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 14
+        }
+      },
+      "max_fuel": null
+    }
+  ]
+}

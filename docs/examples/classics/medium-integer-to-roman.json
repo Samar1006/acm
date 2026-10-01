@@ -1,0 +1,272 @@
+{
+  "title": "Integer to Roman",
+  "description": "Convert the integer `num` to its Roman numeral.\n\n| Symbol | Value |\n| --- | --- |\n| `I` | 1 |\n| `V` | 5 |\n| `X` | 10 |\n| `L` | 50 |\n| `C` | 100 |\n| `D` | 500 |\n| `M` | 1000 |\n\nSymbols are normally written from largest to smallest and added together. Six subtractive pairs are used instead of repeating a symbol four times: `IV` (4), `IX` (9), `XL` (40), `XC` (90), `CD` (400) and `CM` (900).\n\n### Examples\n\n| `num` | Result |\n| --- | --- |\n| `3` | `\"III\"` |\n| `58` | `\"LVIII\"` |\n| `1994` | `\"MCMXCIV\"` |\n\n### Constraints\n\n- `1 <= num <= 3999`\n- Inputs are passed as function arguments and the answer is returned from the function. Do not read from standard input or print the result.\n",
+  "reference": "string int_to_roman(int num) {\n    const pair<int, const char*> parts[] = {\n        {1000, \"M\"}, {900, \"CM\"}, {500, \"D\"}, {400, \"CD\"}, {100, \"C\"}, {90, \"XC\"},\n        {50, \"L\"}, {40, \"XL\"}, {10, \"X\"}, {9, \"IX\"}, {5, \"V\"}, {4, \"IV\"}, {1, \"I\"},\n    };\n    string out;\n    for (const auto& [value, symbol] : parts) {\n        while (num >= value) {\n            out += symbol;\n            num -= value;\n        }\n    }\n    return out;\n}\n",
+  "template": "string int_to_roman(int num) {\n    // Return the Roman numeral for num.\n    return \"\";\n}\n",
+  "tests": [
+    {
+      "index": 0,
+      "input": {
+        "name": "int_to_roman",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 3
+            }
+          }
+        ],
+        "return_type": {
+          "String": "Single"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "Single": "III"
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 1,
+      "input": {
+        "name": "int_to_roman",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 58
+            }
+          }
+        ],
+        "return_type": {
+          "String": "Single"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "Single": "LVIII"
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 2,
+      "input": {
+        "name": "int_to_roman",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 1994
+            }
+          }
+        ],
+        "return_type": {
+          "String": "Single"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "Single": "MCMXCIV"
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 3,
+      "input": {
+        "name": "int_to_roman",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 4
+            }
+          }
+        ],
+        "return_type": {
+          "String": "Single"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "Single": "IV"
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 4,
+      "input": {
+        "name": "int_to_roman",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 9
+            }
+          }
+        ],
+        "return_type": {
+          "String": "Single"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "Single": "IX"
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 5,
+      "input": {
+        "name": "int_to_roman",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 3999
+            }
+          }
+        ],
+        "return_type": {
+          "String": "Single"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "Single": "MMMCMXCIX"
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 6,
+      "input": {
+        "name": "int_to_roman",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 1
+            }
+          }
+        ],
+        "return_type": {
+          "String": "Single"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "Single": "I"
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 7,
+      "input": {
+        "name": "int_to_roman",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 2024
+            }
+          }
+        ],
+        "return_type": {
+          "String": "Single"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "Single": "MMXXIV"
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 8,
+      "input": {
+        "name": "int_to_roman",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 444
+            }
+          }
+        ],
+        "return_type": {
+          "String": "Single"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "Single": "CDXLIV"
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 9,
+      "input": {
+        "name": "int_to_roman",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 1000
+            }
+          }
+        ],
+        "return_type": {
+          "String": "Single"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "Single": "M"
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 10,
+      "input": {
+        "name": "int_to_roman",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 90
+            }
+          }
+        ],
+        "return_type": {
+          "String": "Single"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "Single": "XC"
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 11,
+      "input": {
+        "name": "int_to_roman",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 14
+            }
+          }
+        ],
+        "return_type": {
+          "String": "Single"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "Single": "XIV"
+        }
+      },
+      "max_fuel": null
+    }
+  ]
+}
