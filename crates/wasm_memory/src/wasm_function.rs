@@ -21,7 +21,7 @@ enum FunctionError {
     Memory(String),
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
 pub enum ContainerVariantType {
     Graph,
     Grid,
@@ -87,6 +87,95 @@ impl FunctionValue {
         Ok(next_offset)
     }
 
+    pub fn ty(&self) -> FunctionType {
+        match self {
+            FunctionValue::String(ContainerVariant::Graph(_)) => {
+                FunctionType::String(ContainerVariantType::Graph)
+            }
+            FunctionValue::String(ContainerVariant::Grid(_)) => {
+                FunctionType::String(ContainerVariantType::Grid)
+            }
+            FunctionValue::String(ContainerVariant::List(_)) => {
+                FunctionType::String(ContainerVariantType::List)
+            }
+            FunctionValue::String(ContainerVariant::Single(_)) => {
+                FunctionType::String(ContainerVariantType::Single)
+            }
+            FunctionValue::Int(ContainerVariant::Graph(_)) => {
+                FunctionType::Int(ContainerVariantType::Graph)
+            }
+            FunctionValue::Int(ContainerVariant::Grid(_)) => {
+                FunctionType::Int(ContainerVariantType::Grid)
+            }
+            FunctionValue::Int(ContainerVariant::List(_)) => {
+                FunctionType::Int(ContainerVariantType::List)
+            }
+            FunctionValue::Int(ContainerVariant::Single(_)) => {
+                FunctionType::Int(ContainerVariantType::Single)
+            }
+            FunctionValue::Long(ContainerVariant::Graph(_)) => {
+                FunctionType::Long(ContainerVariantType::Graph)
+            }
+            FunctionValue::Long(ContainerVariant::Grid(_)) => {
+                FunctionType::Long(ContainerVariantType::Grid)
+            }
+            FunctionValue::Long(ContainerVariant::List(_)) => {
+                FunctionType::Long(ContainerVariantType::List)
+            }
+            FunctionValue::Long(ContainerVariant::Single(_)) => {
+                FunctionType::Long(ContainerVariantType::Single)
+            }
+            FunctionValue::Float(ContainerVariant::Graph(_)) => {
+                FunctionType::Float(ContainerVariantType::Graph)
+            }
+            FunctionValue::Float(ContainerVariant::Grid(_)) => {
+                FunctionType::Float(ContainerVariantType::Grid)
+            }
+            FunctionValue::Float(ContainerVariant::List(_)) => {
+                FunctionType::Float(ContainerVariantType::List)
+            }
+            FunctionValue::Float(ContainerVariant::Single(_)) => {
+                FunctionType::Float(ContainerVariantType::Single)
+            }
+            FunctionValue::Double(ContainerVariant::Graph(_)) => {
+                FunctionType::Double(ContainerVariantType::Graph)
+            }
+            FunctionValue::Double(ContainerVariant::Grid(_)) => {
+                FunctionType::Double(ContainerVariantType::Grid)
+            }
+            FunctionValue::Double(ContainerVariant::List(_)) => {
+                FunctionType::Double(ContainerVariantType::List)
+            }
+            FunctionValue::Double(ContainerVariant::Single(_)) => {
+                FunctionType::Double(ContainerVariantType::Single)
+            }
+            FunctionValue::Char(ContainerVariant::Graph(_)) => {
+                FunctionType::Char(ContainerVariantType::Graph)
+            }
+            FunctionValue::Char(ContainerVariant::Grid(_)) => {
+                FunctionType::Char(ContainerVariantType::Grid)
+            }
+            FunctionValue::Char(ContainerVariant::List(_)) => {
+                FunctionType::Char(ContainerVariantType::List)
+            }
+            FunctionValue::Char(ContainerVariant::Single(_)) => {
+                FunctionType::Char(ContainerVariantType::Single)
+            }
+            FunctionValue::Bool(ContainerVariant::Graph(_)) => {
+                FunctionType::Bool(ContainerVariantType::Graph)
+            }
+            FunctionValue::Bool(ContainerVariant::Grid(_)) => {
+                FunctionType::Bool(ContainerVariantType::Grid)
+            }
+            FunctionValue::Bool(ContainerVariant::List(_)) => {
+                FunctionType::Bool(ContainerVariantType::List)
+            }
+            FunctionValue::Bool(ContainerVariant::Single(_)) => {
+                FunctionType::Bool(ContainerVariantType::Single)
+            }
+        }
+    }
+
     pub fn scaling_factor(&self) -> f32 {
         match self {
             FunctionValue::String(ContainerVariant::Single(s)) => s.len() as f32,
@@ -148,7 +237,7 @@ impl PartialEq for FunctionValue {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
 pub enum FunctionType {
     String(ContainerVariantType),
     Int(ContainerVariantType),
@@ -323,6 +412,91 @@ impl WasmFunctionCall {
         Ok((output, before.saturating_sub(store.get_fuel()?)))
     }
 
+    /// Calls the generated Rust export. Scalars use wasm parameters; containers
+    /// use the compact encoding in [`crate::rust_abi`].
+    pub fn call_rust<S>(
+        self,
+        store: &mut Store<S>,
+        instance: &Instance,
+    ) -> Result<(FunctionValue, u64)> {
+        let pointer_args = self
+            .arguments
+            .iter()
+            .any(|arg| crate::is_pointer_type(&arg.ty()));
+        let pointer_result = crate::is_pointer_type(&self.return_type);
+        if !pointer_args
+            && !pointer_result
+            && self.arguments.iter().all(|arg| {
+                matches!(
+                    arg,
+                    FunctionValue::Int(ContainerVariant::Single(_))
+                        | FunctionValue::Long(ContainerVariant::Single(_))
+                )
+            })
+            && matches!(
+                self.return_type,
+                FunctionType::Int(ContainerVariantType::Single)
+                    | FunctionType::Long(ContainerVariantType::Single)
+            )
+        {
+            return self.call_integers(store, instance);
+        }
+
+        const ARG_ALLOC_FUEL_DEFAULT: u64 = 100_000_000_000;
+        let fuel_before_arg_setup = store.get_fuel()?;
+        let arg_setup_bonus = u64::MAX
+            .saturating_sub(fuel_before_arg_setup)
+            .min(ARG_ALLOC_FUEL_DEFAULT);
+        store.set_fuel(fuel_before_arg_setup.saturating_add(arg_setup_bonus))?;
+
+        if instance.get_export(&mut *store, "_initialize").is_some() {
+            instance
+                .get_typed_func::<(), ()>(&mut *store, "_initialize")?
+                .call(&mut *store, ())?;
+        }
+
+        let mut params = Vec::with_capacity(self.arguments.len());
+        if pointer_args || pointer_result {
+            let allocator: AllocatorFunc = instance
+                .get_typed_func(&mut *store, "acm_alloc")
+                .map_err(|_| FunctionError::RequiredFunction("acm_alloc".into()))?;
+            let memory = instance
+                .get_memory(&mut *store, "memory")
+                .ok_or_else(|| FunctionError::Memory("memory".into()))?;
+            for arg in &self.arguments {
+                params.push(rust_param(store, &memory, &allocator, arg)?);
+            }
+        } else {
+            for arg in &self.arguments {
+                params.push(rust_scalar_param(arg)?);
+            }
+        }
+
+        let fuel_after_arg_setup = store.get_fuel()?;
+        store.set_fuel(restore_fuel_after_bonus(
+            fuel_before_arg_setup,
+            fuel_after_arg_setup,
+            arg_setup_bonus,
+        ))?;
+        let initial_fuel = store.get_fuel()?;
+
+        let function = instance
+            .get_func(&mut *store, "acm_entry")
+            .ok_or_else(|| FunctionError::RequiredFunction("acm_entry".into()))?;
+        let mut results = [rust_result_placeholder(self.return_type)];
+        function.call(&mut *store, &params, &mut results)?;
+        let remaining_fuel = store.get_fuel()?;
+        let output = if pointer_result {
+            let memory = instance
+                .get_memory(&mut *store, "memory")
+                .ok_or_else(|| FunctionError::Memory("memory".into()))?;
+            decode_rust_result(store, &memory, results[0].unwrap_i32(), self.return_type)?
+        } else {
+            rust_scalar_result(self.return_type, &results[0])?
+        };
+        Ok((output, initial_fuel.saturating_sub(remaining_fuel)))
+    }
+
     // Returns the return value of the function, along with the fuel consumed *purely* by the
     // invocation of that funcion, not the memory allocation of passing the arguments.
     pub fn call<S>(
@@ -488,6 +662,87 @@ impl WasmFunctionCall {
     }
 }
 
+fn rust_scalar_param(value: &FunctionValue) -> Result<Val> {
+    Ok(match value {
+        FunctionValue::Int(ContainerVariant::Single(v)) => Val::I32(*v),
+        FunctionValue::Long(ContainerVariant::Single(v)) => Val::I64(*v),
+        FunctionValue::Float(ContainerVariant::Single(v)) => Val::F32(v.to_bits()),
+        FunctionValue::Double(ContainerVariant::Single(v)) => Val::F64(v.to_bits()),
+        FunctionValue::Char(ContainerVariant::Single(v)) => Val::I32(*v as i32),
+        FunctionValue::Bool(ContainerVariant::Single(v)) => Val::I32(i32::from(*v)),
+        _ => anyhow::bail!("expected a Rust scalar argument"),
+    })
+}
+
+fn rust_param<S>(
+    store: &mut Store<S>,
+    memory: &Memory,
+    allocator: &AllocatorFunc,
+    value: &FunctionValue,
+) -> Result<Val> {
+    if crate::is_pointer_type(&value.ty()) {
+        let blob = crate::wrap_payload(&crate::encode_payload(value)?)?;
+        let address = allocator.call(&mut *store, blob.len() as i32)? as usize;
+        memory.write(&mut *store, address, &blob)?;
+        Ok(Val::I32(address as i32))
+    } else {
+        rust_scalar_param(value)
+    }
+}
+
+fn rust_result_placeholder(ty: FunctionType) -> Val {
+    match ty {
+        FunctionType::Long(ContainerVariantType::Single) => Val::I64(0),
+        FunctionType::Float(ContainerVariantType::Single) => Val::F32(0),
+        FunctionType::Double(ContainerVariantType::Single) => Val::F64(0),
+        _ => Val::I32(0),
+    }
+}
+
+fn rust_scalar_result(ty: FunctionType, value: &Val) -> Result<FunctionValue> {
+    Ok(match ty {
+        FunctionType::Int(ContainerVariantType::Single) => {
+            FunctionValue::Int(ContainerVariant::Single(value.unwrap_i32()))
+        }
+        FunctionType::Long(ContainerVariantType::Single) => {
+            FunctionValue::Long(ContainerVariant::Single(value.unwrap_i64()))
+        }
+        FunctionType::Float(ContainerVariantType::Single) => {
+            FunctionValue::Float(ContainerVariant::Single(value.unwrap_f32()))
+        }
+        FunctionType::Double(ContainerVariantType::Single) => {
+            FunctionValue::Double(ContainerVariant::Single(value.unwrap_f64()))
+        }
+        FunctionType::Char(ContainerVariantType::Single) => {
+            FunctionValue::Char(ContainerVariant::Single(value.unwrap_i32() as u8 as char))
+        }
+        FunctionType::Bool(ContainerVariantType::Single) => {
+            FunctionValue::Bool(ContainerVariant::Single(value.unwrap_i32() != 0))
+        }
+        _ => anyhow::bail!("expected a Rust scalar result"),
+    })
+}
+
+fn decode_rust_result<S>(
+    store: &mut Store<S>,
+    memory: &Memory,
+    ptr: i32,
+    ty: FunctionType,
+) -> Result<FunctionValue> {
+    if ptr == 0 {
+        anyhow::bail!("Rust result pointer was null");
+    }
+    let mut len_buf = [0u8; 4];
+    memory.read(&mut *store, ptr as usize, &mut len_buf)?;
+    let len = u32::from_le_bytes(len_buf) as usize;
+    if len > crate::MAX_BLOB {
+        anyhow::bail!("Rust result encoding exceeded {} bytes", crate::MAX_BLOB);
+    }
+    let mut payload = vec![0u8; len];
+    memory.read(&mut *store, ptr as usize + 4, &mut payload)?;
+    crate::decode_payload(&ty, &payload)
+}
+
 fn val_types_match(expected: &[ValType], actual: &[ValType]) -> bool {
     expected.len() == actual.len()
         && expected
@@ -602,6 +857,48 @@ mod tests {
         assert!(error
             .to_string()
             .contains("required memory export \"memory\""));
+    }
+
+    #[test]
+    fn rust_container_call_decodes_a_list_sum() {
+        let wat = r#"
+            (module
+              (memory (export "memory") 2)
+              (global $heap (mut i32) (i32.const 16))
+              (func (export "acm_alloc") (param i32) (result i32)
+                (local $p i32)
+                (local.set $p (global.get $heap))
+                (global.set $heap (i32.add (global.get $heap) (local.get 0)))
+                (local.get $p))
+              (func (export "acm_entry") (param i32) (result i32)
+                (local $count i32) (local $i i32) (local $sum i32) (local $p i32)
+                (local.set $p (i32.add (local.get 0) (i32.const 4)))
+                (local.set $count (i32.load (local.get $p)))
+                (local.set $p (i32.add (local.get $p) (i32.const 4)))
+                (loop $more
+                  (if (i32.eq (local.get $i) (local.get $count))
+                    (then (return (local.get $sum))))
+                  (local.set $sum (i32.add (local.get $sum) (i32.load (local.get $p))))
+                  (local.set $p (i32.add (local.get $p) (i32.const 4)))
+                  (local.set $i (i32.add (local.get $i) (i32.const 1)))
+                  (br $more))
+                (local.get $sum)))
+        "#;
+        let mut config = Config::default();
+        config.consume_fuel(true);
+        let engine = Engine::new(&config).unwrap();
+        let module = Module::new(&engine, wat).unwrap();
+        let mut store = Store::new(&engine, ());
+        store.set_fuel(10_000).unwrap();
+        let instance = Instance::new(&mut store, &module, &[]).unwrap();
+        let input = WasmFunctionCall::new(
+            "sum",
+            vec![FunctionValue::Int(ContainerVariant::List(vec![1, 2, 3, 4]))],
+            FunctionType::Int(ContainerVariantType::Single),
+        );
+        let (value, fuel) = input.call_rust(&mut store, &instance).unwrap();
+        assert_eq!(value, FunctionValue::Int(ContainerVariant::Single(10)));
+        assert!(fuel > 0);
     }
 
     #[test]

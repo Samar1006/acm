@@ -72,28 +72,27 @@ These instructions use source builds, not a prebuilt registry release.
 The API accepts `language: "cpp"` or `language: "rust"`. Old requests, saved drafts, and database rows default to C++.
 Ramiel adds `/run/rust` and `/custom-input/rust`. Reference solutions and `/generate-tests/c++` remain C++.
 
-Rust supports scalar `i32` and `i64` arguments and results. All tests must use one function signature.
-Strings, lists, grids, graphs, floats, and other boundary types return an explicit error.
-The editor provides a template from the validated test signature. For Add Two Numbers:
+Rust supports the same typed arguments and results as C++: scalars, `String`, `Vec<T>`, and `Vec<Vec<T>>` (lists and grids). All tests must use one function signature.
+The editor provides a template from the problem's tests. For Coin Change:
 
 ```rust
-fn add(a: i32, b: i32) -> i32 {
-    a + b
+fn coin_change(coins: Vec<i32>, amount: i32) -> i32 {
+    // Return the answer.
+    0
 }
 ```
 
-The standard library is available inside the function, including local strings and vectors.
-The [WASI target](https://doc.rust-lang.org/rustc/platform-support/wasm32-wasip1.html) has platform limits.
+The standard library is available. The [WASI target](https://doc.rust-lang.org/rustc/platform-support/wasm32-wasip1.html) has platform limits.
 The guest has no filesystem access, network access, or application environment variables.
 Cargo dependencies and build scripts are not supported.
 
 The container includes Rust 1.92.0 and the `wasm32-wasip1` target at `/opt/submission-rust`.
 Ramiel invokes `rustc` directly with fixed flags and a cleared environment.
-A generated wrapper exports `acm_entry`. Scalar values pass directly through Wasmtime, without C++ memory layouts.
+A generated wrapper exports `acm_entry`. Scalars pass as Wasm parameters; strings and vectors use a compact encoding in linear memory, not C++ layouts.
 Compiler diagnostics use the existing error display.
 
 Rust uses the existing deadlines and memory limits. Its fuel budget is four times the adjusted C++ reference budget, with a 100,000-unit minimum.
-The existing global fuel cap still applies. This initial allowance is for integer signatures, not a cross-language performance comparison.
+The existing global fuel cap still applies. This is an initial allowance, not a cross-language performance comparison.
 C++ fuel budgets remain unchanged.
 
 After the default local Compose runner is healthy, run from the repository root:
