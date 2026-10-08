@@ -47,8 +47,14 @@ pub async fn custom(
     .await
     .map_err(|_| ServerError::NotFound)?;
 
-    if form.language == Language::Rust {
-        super::rust_signature(&pool, form.problem_id, Some(&form.input)).await?;
+    match form.language {
+        Language::Cpp => {}
+        Language::Rust => {
+            super::rust_signature(&pool, form.problem_id, Some(&form.input)).await?;
+        }
+        Language::Python => {
+            super::python_signature(&pool, form.problem_id, Some(&form.input)).await?;
+        }
     }
 
     let queue_item = Box::new(CustomInputJob {

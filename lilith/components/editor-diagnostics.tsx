@@ -10,7 +10,7 @@ const compilerOwner = "submission-compiler";
 export default function EditorDiagnostics({ editor, problem, language }: {
     editor: monaco.editor.IStandaloneCodeEditor;
     problem: number;
-    language: "cpp" | "rust";
+    language: "cpp" | "rust" | "python";
 }) {
     const enabled = useStore(state => state.inlineCodeChecks === true);
     const [status, setStatus] = useState("");
@@ -29,7 +29,8 @@ export default function EditorDiagnostics({ editor, problem, language }: {
                 monaco.editor.setModelMarkers(model, compilerOwner, []);
             }
         };
-        const checks = syntaxChecks(
+        // No Python grammar is bundled; Python gets runner diagnostics only.
+        const checks = language === "python" ? null : syntaxChecks(
             () => new Worker("/editor-diagnostics/worker.js", { type: "module" }),
             result => {
                 const state = useSession.getState();
@@ -48,6 +49,7 @@ export default function EditorDiagnostics({ editor, problem, language }: {
         const schedule = () => {
             if (model.isDisposed()) return;
             clear();
+            if (!checks || language === "python") return;
             const state = useSession.getState();
             checks.update({ editor: state.diagnosticEditor, session: state.diagnosticGeneration,
                 revision: state.diagnosticRevision, version: model.getVersionId(),
@@ -69,9 +71,9 @@ export default function EditorDiagnostics({ editor, problem, language }: {
         });
         // Clear synchronously at opt-out, before React's effect cleanup.
         const preference = useStore.subscribe(state => {
-            if (state.inlineCodeChecks !== true) { checks.dispose(); clear(); }
+            if (state.inlineCodeChecks !== true) { checks?.dispose(); clear(); }
         });
-        return () => { unsubscribe(); preference(); content.dispose(); checks.dispose(); clear(); };
+        return () => { unsubscribe(); preference(); content.dispose(); checks?.dispose(); clear(); };
     }, [editor, enabled, language, problem]);
 
     return enabled ? <p role="status" className="text-xs px-2 py-1">{status}</p> : null;

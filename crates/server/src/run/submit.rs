@@ -6,6 +6,7 @@ use serde_json::Value;
 use shared::models::{
     forms::SubmitJob,
     language::{Language, RustSignature},
+    python::PythonSignature,
     runner::{RunnerError, RunnerResponse},
     test::Test,
 };
@@ -47,7 +48,9 @@ pub async fn submit(
         FROM
             tests
         WHERE
-            problem_id = ?"#,
+            problem_id = ?
+        ORDER BY
+            test_number"#,
     )
     .bind(form.problem_id)
     .fetch_all(&pool)
@@ -61,8 +64,14 @@ pub async fn submit(
             .await
             .map_err(|_| ServerError::NotFound)?;
 
-    if form.language == Language::Rust {
-        RustSignature::from_calls(tests.iter().map(|test| &test.input))?;
+    match form.language {
+        Language::Cpp => {}
+        Language::Rust => {
+            RustSignature::from_calls(tests.iter().map(|test| &test.input))?;
+        }
+        Language::Python => {
+            PythonSignature::from_calls(tests.iter().map(|test| &test.input))?;
+        }
     }
 
     let queue_item = Box::new(SubmitJob {

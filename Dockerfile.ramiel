@@ -30,6 +30,21 @@ RUN case "$(uname -m)" in \
         -C linker="$linker" -C linker-flavor=ld.lld -C opt-level=2 -C panic=abort \
         /compiler-sandbox.rs -o /compiler-sandbox
 
+# CPython 3.14.7 built for WebAssembly, run by Ramiel inside Wasmtime. Its
+# standard library is compiled to bytecode by the same CPython release, so
+# imports in the sandbox do not start from source. The stage's native Python
+# never runs submissions and is not copied into the final image.
+FROM --platform=$ACM_DOCKER_PLATFORM python:3.14.7-slim-bookworm AS submission-python
+# Digest from the brettcannon/cpython-wasi-build v3.14.7 GitHub release asset metadata.
+ADD --checksum=sha256:2e064d3fb8172471d39d741348efa722349c40b96301f69968dff714999c584b \
+    https://github.com/brettcannon/cpython-wasi-build/releases/download/v3.14.7/python-3.14.7-wasi_sdk-24.zip \
+    /tmp/python-wasi.zip
+RUN python -m zipfile -e /tmp/python-wasi.zip /opt/acm-python && \
+    test -f /opt/acm-python/python.wasm && \
+    cd /opt/acm-python/lib/python3.14 && \
+    python -m compileall -q --invalidation-mode unchecked-hash -d /lib/python3.14 . && \
+    chmod -R a+rX,go-w /opt/acm-python
+
 FROM --platform=$ACM_DOCKER_PLATFORM debian:bookworm-slim
 WORKDIR /
 
@@ -54,6 +69,7 @@ RUN apt-get purge -y wget && \
 RUN useradd --system --create-home --uid 10001 ramiel
 
 COPY --from=submission-toolchain /opt/submission-rust /opt/submission-rust
+COPY --from=submission-python /opt/acm-python /opt/acm-python
 COPY --from=sandbox-builder /compiler-sandbox /usr/local/libexec/acm-compiler-sandbox
 COPY --from=builder /tmp/ramiel /usr/local/bin/ramiel
 COPY ./wasmtime-cache.toml /wasmtime-cache.toml

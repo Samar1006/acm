@@ -31,16 +31,21 @@ type Problem = {
     competition_id?: number;
 };
 
-async function rustTemplate(url: string): Promise<string> {
+async function rustTemplate(url: string, name = "Rust"): Promise<string> {
     const response = await fetch(url, { credentials: "include" });
     if (!response.ok) {
         const body = await response.json().catch(() => null);
         throw new Error(
-            body?.message ?? body?.error ?? "Could not load the Rust template.",
+            body?.message ??
+                body?.error ??
+                `Could not load the ${name} template.`,
         );
     }
     return response.json();
 }
+
+// Rust and Python starter code is generated from the problem's tests.
+const generatedTemplates = { rust: "Rust", python: "Python" } as const;
 
 function ProblemEditorWrapper({
     id,
@@ -59,14 +64,16 @@ function ProblemEditorWrapper({
     );
     const setProblemImpl = useStore((state) => state.setProblemImpl);
     const setLanguage = useStore((state) => state.setProblemLanguage);
+    const generated = language === "cpp" ? undefined : language;
     const { data, error } = useSWR<string>(
-        id && language === "rust"
-            ? api_url(`/problems/${id}/rust-template`)
+        id && generated
+            ? api_url(`/problems/${id}/${generated}-template`)
             : null,
-        rustTemplate,
+        (url: string) =>
+            rustTemplate(url, generated && generatedTemplates[generated]),
         { shouldRetryOnError: false },
     );
-    const content = saved ?? (language === "rust" ? data : template) ?? "";
+    const content = saved ?? (generated ? data : template) ?? "";
     return (
         <div className="bg-white dark:bg-neutral-900 h-full min-h-0 flex flex-col ring-1 md:ring-0 ring-neutral-300 dark:ring-neutral-700">
             <label className="p-2 border-b border-neutral-300 dark:border-neutral-700">
@@ -81,11 +88,18 @@ function ProblemEditorWrapper({
                 >
                     <option value="cpp">C++</option>
                     <option value="rust">Rust</option>
+                    <option value="python">Python</option>
                 </select>
             </label>
             {language === "rust" && (
                 <p className="px-2 text-sm">
                     Rust standard library only. Cargo crates are not available.
+                </p>
+            )}
+            {language === "python" && (
+                <p className="px-2 text-sm">
+                    Python 3.14 standard library only. Packages such as NumPy
+                    are not available.
                 </p>
             )}
             {error && (

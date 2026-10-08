@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 
-export default function SourceCodeBlock({ text, language = "cpp" }: { text: string, language?: "cpp" | "rust" }): JSX.Element {
+export default function SourceCodeBlock({ text, language = "cpp" }: { text: string, language?: "cpp" | "rust" | "python" }): JSX.Element {
   const preRef = useRef<HTMLPreElement>(null);
 
   useEffect(() => {

@@ -72,8 +72,9 @@ impl Runner for Rust {
                 timeout_message,
             )
             .await?;
-            results.runtime += result.fuel;
-            results.insert(result);
+            if !results.insert(result) {
+                break;
+            }
         }
         Ok(results.into())
     }
