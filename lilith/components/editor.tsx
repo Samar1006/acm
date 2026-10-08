@@ -7,7 +7,7 @@ import { useStore } from "../utils/state";
 import EditorDiagnostics from "./editor-diagnostics";
 
 type EditorProps = {
-    language: "cpp" | "rust" | "markdown";
+    language: "cpp" | "rust" | "python" | "markdown";
     onChange: (
         text: string,
         event: monaco.editor.IModelContentChangedEvent

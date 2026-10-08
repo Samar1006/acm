@@ -32,7 +32,7 @@ export function SubmissionTime({ time }: { time: string }): JSX.Element {
 }
 
 type Submission = {
-  language?: "cpp" | "rust";
+  language?: "cpp" | "rust" | "python";
   id: number;
   problem_id: number;
   problem_title: string;

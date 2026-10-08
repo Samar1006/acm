@@ -1,6 +1,6 @@
 # Chico ACM
 
-**A programming-competition site for C++ and Rust practice.**
+**A programming-competition site for C++, Rust, and Python practice.**
 
 [![Validation](https://github.com/SloppyBobbert/acm/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/SloppyBobbert/acm/actions/workflows/validate.yml)
 
@@ -8,7 +8,7 @@
 
 | Frontend | API | Runner |
 | --- | --- | --- |
-| Next.js | Rust with SQLite storage | Ramiel compiles C++ and Rust to WebAssembly and executes them with Wasmtime. |
+| Next.js | Rust with SQLite storage | Ramiel compiles C++ and Rust to WebAssembly and executes them with Wasmtime. Python runs in CPython built for WebAssembly, inside the same sandbox. |
 
 ---
 
@@ -20,7 +20,7 @@ For the complete local stack, use:
 - Native amd64 or arm64 containers. The Docker Linux kernel must support Landlock ABI 3 or later.
 - A development Discord application for sign-in.
 
-Docker supplies the compilers, Rust, Node.js, and frontend dependencies. You do not need host Rust or Node.js for this setup. Ramiel checks filesystem isolation at startup and refuses to run without it.
+Docker supplies the compilers, the Python interpreter, Rust, Node.js, and frontend dependencies. You do not need host Rust or Node.js for this setup. Ramiel checks filesystem isolation at startup and refuses to run without it.
 
 See [platform support](crates/ramiel/README.md#docker-platform-support) for verified environments and remaining limits.
 
@@ -149,6 +149,8 @@ In the submission editor, open **Settings** and enable **Inline code checks** fo
 
 Rust submissions accept the same typed arguments and results as C++ (`i32`/`i64`, `String`, `Vec`, nested vectors). See [Rust submissions](crates/ramiel/README.md#rust-submissions) and [editor diagnostics](docs/editor-diagnostics.md).
 
+Python submissions use plain `int`, `float`, `bool`, `str`, and `list` values with the Python 3.14 standard library. Inline syntax checks do not cover Python; errors from Run and Submit still mark the affected line. See [Python submissions](crates/ramiel/README.md#python-submissions).
+
 ---
 
 ## Repository map
@@ -157,7 +159,7 @@ Rust submissions accept the same typed arguments and results as C++ (`i32`/`i64`
 | --- | --- |
 | `compose.yml` | Complete local Docker stack |
 | `crates/server/` | API, authentication, job queue, and WebSocket endpoint |
-| `crates/ramiel/` | Isolated compilers and Wasmtime runner |
+| `crates/ramiel/` | Isolated compilers, Python interpreter, and Wasmtime runner |
 | `lilith/` | Next.js frontend |
 | `migrations/` | SQLite schema migrations |
 | `scripts/dev-local.sh` | Optional host development launcher |

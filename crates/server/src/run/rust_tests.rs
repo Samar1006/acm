@@ -95,7 +95,7 @@ async fn migration_and_submission_routes_keep_legacy_defaults() {
     let form: super::submit::SubmitForm = serde_json::from_value(legacy.clone()).unwrap();
     assert_eq!(form.language, Language::Cpp);
     let mut invalid = legacy;
-    invalid["language"] = "python".into();
+    invalid["language"] = "java".into();
     assert!(serde_json::from_value::<super::submit::SubmitForm>(invalid).is_err());
     server.abort();
 }
@@ -135,7 +135,7 @@ async fn custom_runs_require_visible_problems_or_officer_access() {
     .execute(&pool)
     .await
     .unwrap();
-    for language in [Language::Cpp, Language::Rust] {
+    for language in [Language::Cpp, Language::Rust, Language::Python] {
         for (visible, auth, allowed) in [
             (false, Auth::Member, false),
             (false, Auth::Officer, true),

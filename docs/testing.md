@@ -18,6 +18,8 @@ SQLX_OFFLINE=true cargo check -p ramiel --locked
 SQLX_OFFLINE=true cargo test -p ramiel --locked
 ```
 
+Ramiel's real Python interpreter test runs only when `ACM_PYTHON_HOME` names a directory with `python.wasm` and its `lib` directory, as in the runner image. Without it the test passes without checking anything, and the [runner container script](../crates/ramiel/README.md#python-submissions) covers the same behavior. A debug build needs several minutes to compile the interpreter.
+
 The checked-in `.sqlx` metadata supports ordinary offline compilation. Use `SQLX_OFFLINE=true` for routine checks and tests. Set `DATABASE_URL` only when running the application or intentionally performing online SQLx checking against a migrated schema; the server applies migrations when it starts.
 
 ## Frontend
@@ -125,6 +127,6 @@ The deployment helper tests use a real synthetic SQLite database. The writer com
 
 `.github/workflows/validate.yml` runs on pull requests and pushes to `main`. It checks Rust formatting, locked workspace check, Clippy with warnings denied, and locked workspace tests; uses Node 22 to install frontend dependencies with Yarn Classic, then lints and builds; runs Bash syntax and semantic deployment-script tests; and validates local and production Compose configuration with placeholder environment values. The semantic deployment tests exercise backup and restore contracts with real SQLite/WAL data and mocked container lifecycle operations, but not a live Docker-backed restore. Ubuntu CI exercises `flock` and `timeout` coverage that is skipped on macOS when those commands are unavailable.
 
-The `runner-isolation` CI matrix runs the real C++ and Rust compilers and Wasmtime in restricted native Linux amd64 and arm64 containers. It checks reference/peer-file access denial, recovery, execution limits, and missing-helper startup rejection. It also runs complete-stack and isolated failure-recovery checks. See [security verification](../specs/security/REVIEW.md).
+The `runner-isolation` CI matrix runs the real C++ and Rust compilers, the Python interpreter, and Wasmtime in restricted native Linux amd64 and arm64 containers. It checks reference/peer-file access denial, recovery, execution limits, and missing-helper startup rejection. It also runs complete-stack and isolated failure-recovery checks. See [security verification](../specs/security/REVIEW.md).
 
 CI does not deploy, exercise live DNS/TLS/OAuth, run the production smoke check, perform a live Docker-backed restore, prove a host is correctly bootstrapped, or provide automated backup supervision. CI does not enable scheduled backups or configure host supervision. Run the operator checks for those conditions.

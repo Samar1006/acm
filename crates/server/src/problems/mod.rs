@@ -55,6 +55,10 @@ pub fn routes() -> Router {
         .route("/:problem_id", get(problem::problem))
         .route("/:problem_id/edit", post(edit::edit))
         .route("/:problem_id/rust-template", get(problem::rust_template))
+        .route(
+            "/:problem_id/python-template",
+            get(problem::python_template),
+        )
         .route("/:problem_id/tests", get(tests::tests))
         .route("/:problem_id/tests/:test_number", get(tests::problem_test))
         .route("/:problem_id/history", get(history::history))

@@ -11,12 +11,13 @@ Vercel frontend                 Caddy (public :80, :443)
                                   |        |
                                   v        v
                              SQLite file  Ramiel (:8082)
-                                           C++ -> WASI -> Wasmtime
+                                           C++, Rust -> WASI -> Wasmtime
+                                           Python -> CPython (WASI) -> Wasmtime
 ```
 
 The frontend is deployed separately and uses `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_WS_URL` for API and WebSocket access. For Discord sign-in, it navigates to the API start endpoint. The API owns `DISCORD_CLIENT_ID`, `DISCORD_REDIRECT_URI`, and `DISCORD_SECRET`; no Discord OAuth value belongs in the frontend environment. Caddy terminates public traffic for the API domain and reverse-proxies it to `server`.
 
-The server owns authentication, competition data, and SQLite migrations. It sends compilation and execution requests to Ramiel over HTTP. Ramiel compiles C++ with the WASI SDK and executes the generated WebAssembly with Wasmtime.
+The server owns authentication, competition data, and SQLite migrations. It sends compilation and execution requests to Ramiel over HTTP. Ramiel compiles C++ with the WASI SDK and Rust with `rustc`, and executes the generated WebAssembly with Wasmtime. Python source is not compiled by Ramiel; it runs in a CPython interpreter that is a WebAssembly module in the same Wasmtime runtime.
 
 ## Jobs and live updates
 

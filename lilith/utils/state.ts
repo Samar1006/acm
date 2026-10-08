@@ -26,7 +26,7 @@ export type AsymptoticComplexity =
     "LOG" |
     "CONSTANT";
 
-export type Language = "cpp" | "rust";
+export type Language = "cpp" | "rust" | "python";
 
 export type Submission = {
     language?: Language;
@@ -51,6 +51,7 @@ export interface Store {
 
     problemImpls: { [key: number]: string };
     rustImpls: { [key: number]: string };
+    pythonImpls: { [key: number]: string };
     problemLanguages: { [key: number]: Language };
     setProblemLanguage: (id: number, language: Language) => void;
 
@@ -62,7 +63,9 @@ export interface Store {
 }
 
 export function getProblemImpl(state: Store, id: number, language = state.problemLanguages[id] ?? "cpp") {
-    return language === "rust" ? state.rustImpls[id] : state.problemImpls[id];
+    if (language === "rust") return state.rustImpls[id];
+    if (language === "python") return state.pythonImpls[id];
+    return state.problemImpls[id];
 }
 
 export const useStore = createWithEqualityFn<Store>()(
@@ -78,6 +81,7 @@ export const useStore = createWithEqualityFn<Store>()(
             editorFontSize: 18,
             problemImpls: {},
             rustImpls: {},
+            pythonImpls: {},
             problemLanguages: {},
             setProblemLanguage: (id, language) => {
                 useSession.getState().invalidateDiagnostics();
@@ -89,6 +93,7 @@ export const useStore = createWithEqualityFn<Store>()(
                 set(
                     produce((state: Store) => {
                         if (language === "rust") state.rustImpls[id] = impl;
+                        else if (language === "python") state.pythonImpls[id] = impl;
                         else state.problemImpls[id] = impl;
                         state.problemLanguages[id] = language;
                     })

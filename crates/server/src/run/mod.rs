@@ -34,27 +34,47 @@ use crate::{
 mod custom;
 mod generate_tests;
 #[cfg(test)]
+mod python_tests;
+#[cfg(test)]
 mod rust_tests;
 mod submit;
 
-pub(crate) async fn rust_signature(
+async fn stored_calls(
     pool: &SqlitePool,
     problem_id: i64,
-    custom: Option<&wasm_memory::WasmFunctionCall>,
-) -> Result<shared::models::language::RustSignature, ServerError> {
+) -> Result<Vec<wasm_memory::WasmFunctionCall>, ServerError> {
     let rows: Vec<(String,)> =
         sqlx::query_as("SELECT input FROM tests WHERE problem_id = ? ORDER BY test_number")
             .bind(problem_id)
             .fetch_all(pool)
             .await
             .map_err(|_| ServerError::InternalError)?;
-    let calls = rows
-        .into_iter()
+    rows.into_iter()
         .map(|(input,)| serde_json::from_str::<wasm_memory::WasmFunctionCall>(&input))
         .collect::<Result<Vec<_>, _>>()
-        .map_err(|_| ServerError::InternalError)?;
+        .map_err(|_| ServerError::InternalError)
+}
+
+pub(crate) async fn rust_signature(
+    pool: &SqlitePool,
+    problem_id: i64,
+    custom: Option<&wasm_memory::WasmFunctionCall>,
+) -> Result<shared::models::language::RustSignature, ServerError> {
+    let calls = stored_calls(pool, problem_id).await?;
     shared::models::language::RustSignature::from_calls(calls.iter())?;
     Ok(shared::models::language::RustSignature::from_calls(
+        calls.iter().chain(custom),
+    )?)
+}
+
+pub(crate) async fn python_signature(
+    pool: &SqlitePool,
+    problem_id: i64,
+    custom: Option<&wasm_memory::WasmFunctionCall>,
+) -> Result<shared::models::python::PythonSignature, ServerError> {
+    let calls = stored_calls(pool, problem_id).await?;
+    shared::models::python::PythonSignature::from_calls(calls.iter())?;
+    Ok(shared::models::python::PythonSignature::from_calls(
         calls.iter().chain(custom),
     )?)
 }

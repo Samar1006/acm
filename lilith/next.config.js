@@ -13,7 +13,7 @@ const nextConfig = withTM({
 
     config.plugins.push(
       new MonacoWebpackPlugin({
-        languages: ["cpp", "rust", "markdown"],
+        languages: ["cpp", "rust", "python", "markdown"],
         features: [],
         filename: "static/[name].worker.js",
       })
