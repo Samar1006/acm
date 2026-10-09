@@ -1,0 +1,319 @@
+{
+  "title": "Unique Paths",
+  "description": "A robot starts in the top-left cell of a grid with `m` rows and `n` columns. On each move it steps one cell **right** or one cell **down**.\n\nReturn the number of different paths the robot can take to reach the bottom-right cell.\n\n### Constraints\n\n- `1 <= m, n <= 100`\n- The answer is at most `2000000000`.\n- Inputs are passed as function arguments and the answer is returned from the function. Do not read from standard input or print the result.\n",
+  "reference": "int unique_paths(int m, int n) {\n    vector<long long> row(n, 1);\n    for (int r = 1; r < m; ++r) {\n        for (int c = 1; c < n; ++c) {\n            row[c] += row[c - 1];\n        }\n    }\n    return (int)row[n - 1];\n}\n",
+  "template": "int unique_paths(int m, int n) {\n    // Return the number of right/down paths through an m by n grid.\n    return 0;\n}\n",
+  "tags": [
+    "Math",
+    "Dynamic Programming"
+  ],
+  "examples": [
+    {
+      "test_number": 0,
+      "explanation": "Every path makes 2 moves down and 6 moves right, 8 moves in total. Choosing which 2 of the 8 moves go down can be done in 28 ways."
+    },
+    {
+      "test_number": 1,
+      "explanation": "The robot needs 2 moves down and 1 move right. The right move can come first, second, or last, which gives 3 paths."
+    }
+  ],
+  "tests": [
+    {
+      "index": 0,
+      "input": {
+        "name": "unique_paths",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 3
+            }
+          },
+          {
+            "Int": {
+              "Single": 7
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 28
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 1,
+      "input": {
+        "name": "unique_paths",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 3
+            }
+          },
+          {
+            "Int": {
+              "Single": 2
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 3
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 2,
+      "input": {
+        "name": "unique_paths",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 1
+            }
+          },
+          {
+            "Int": {
+              "Single": 1
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 1
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 3,
+      "input": {
+        "name": "unique_paths",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 1
+            }
+          },
+          {
+            "Int": {
+              "Single": 100
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 1
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 4,
+      "input": {
+        "name": "unique_paths",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 100
+            }
+          },
+          {
+            "Int": {
+              "Single": 1
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 1
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 5,
+      "input": {
+        "name": "unique_paths",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 2
+            }
+          },
+          {
+            "Int": {
+              "Single": 2
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 2
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 6,
+      "input": {
+        "name": "unique_paths",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 7
+            }
+          },
+          {
+            "Int": {
+              "Single": 3
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 28
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 7,
+      "input": {
+        "name": "unique_paths",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 10
+            }
+          },
+          {
+            "Int": {
+              "Single": 10
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 48620
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 8,
+      "input": {
+        "name": "unique_paths",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 4
+            }
+          },
+          {
+            "Int": {
+              "Single": 60
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 37820
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 9,
+      "input": {
+        "name": "unique_paths",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 17
+            }
+          },
+          {
+            "Int": {
+              "Single": 17
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 601080390
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 10,
+      "input": {
+        "name": "unique_paths",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 100
+            }
+          },
+          {
+            "Int": {
+              "Single": 5
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 4421275
+        }
+      },
+      "max_fuel": null
+    }
+  ]
+}

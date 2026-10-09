@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
 
 mod edit;
+pub(crate) mod extras;
 mod history;
 mod index;
 mod leaderboard;
@@ -52,12 +53,20 @@ pub fn routes() -> Router {
     Router::new()
         .route("/", get(index::problems))
         .route("/new", post(new::new))
+        .route("/tags", get(extras::tags))
         .route("/:problem_id", get(problem::problem))
         .route("/:problem_id/edit", post(edit::edit))
         .route("/:problem_id/rust-template", get(problem::rust_template))
         .route(
             "/:problem_id/python-template",
             get(problem::python_template),
+        )
+        .route("/:problem_id/examples", get(extras::examples))
+        .route("/:problem_id/meta", get(extras::meta))
+        .route("/:problem_id/bookmark", post(extras::bookmark))
+        .route(
+            "/:problem_id/draft",
+            get(extras::draft).post(extras::save_draft),
         )
         .route("/:problem_id/tests", get(tests::tests))
         .route("/:problem_id/tests/:test_number", get(tests::problem_test))
@@ -83,4 +92,73 @@ pub fn routes() -> Router {
             "/:problem_id/recent-tests/:test_number",
             get(recent_tests::recent_tests_test),
         )
+}
+
+/// Thin wrappers so tests in other modules can call these handlers.
+#[cfg(test)]
+pub(crate) async fn edit_for_tests(
+    pool: &sqlx::SqlitePool,
+    claims: crate::auth::Claims,
+    form: serde_json::Value,
+) -> Result<(), crate::error::ServerError> {
+    edit::edit(
+        axum::Extension(pool.clone()),
+        claims,
+        axum::extract::Path(1),
+        axum::Json(serde_json::from_value(form).unwrap()),
+    )
+    .await
+}
+
+#[cfg(test)]
+pub(crate) async fn history_for_tests(
+    pool: &sqlx::SqlitePool,
+    problem_id: i64,
+    claims: crate::auth::Claims,
+) -> Result<axum::Json<serde_json::Value>, crate::error::ServerError> {
+    let query = axum::extract::Query(serde_json::from_value(serde_json::json!({})).unwrap());
+    let axum::Json(items) = history::history(
+        axum::extract::Path(problem_id),
+        axum::Extension(pool.clone()),
+        query,
+        claims,
+    )
+    .await?;
+    Ok(axum::Json(serde_json::to_value(items).unwrap()))
+}
+
+#[cfg(test)]
+pub(crate) async fn list_for_tests(
+    pool: &sqlx::SqlitePool,
+    query: &str,
+    claims: crate::auth::Claims,
+) -> Result<axum::Json<serde_json::Value>, crate::error::ServerError> {
+    let uri: axum::http::Uri = format!("/?{query}").parse().unwrap();
+    let axum::Json(items) = index::problems(
+        axum::Extension(pool.clone()),
+        axum::extract::Query::try_from_uri(&uri).unwrap(),
+        axum::extract::Query::try_from_uri(&uri).unwrap(),
+        claims,
+    )
+    .await?;
+    Ok(axum::Json(serde_json::to_value(items).unwrap()))
+}
+
+#[cfg(test)]
+pub(crate) async fn new_for_tests(
+    pool: &sqlx::SqlitePool,
+    claims: crate::auth::Claims,
+    form: &str,
+) -> Result<i64, crate::error::ServerError> {
+    let (broadcast, _) = tokio::sync::broadcast::channel(8);
+    let axum::Json(created) = new::new(
+        axum::Extension(pool.clone()),
+        axum::Extension(broadcast),
+        claims,
+        axum::Json(serde_json::from_str(form).unwrap()),
+    )
+    .await?;
+    Ok(serde_json::to_value(created).unwrap()["id"]
+        .as_i64()
+        .unwrap())
 }

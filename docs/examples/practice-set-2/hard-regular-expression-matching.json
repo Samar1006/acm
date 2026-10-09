@@ -1,0 +1,563 @@
+{
+  "title": "Regular Expression Matching",
+  "description": "Decide whether a pattern `p` matches a string `s`. The pattern is made of lowercase letters and two special characters:\n\n- `.` matches any single character.\n- `*` means \"zero or more copies of the character just before it\". For example, `a*` matches an empty string, `a`, `aa`, and so on, and `.*` matches any string at all.\n\nThe pattern must match the **whole** string, not just part of it. Return `true` if it does and `false` otherwise.\n\n### Constraints\n\n- `0 <= s.size() <= 20`, and `s` contains only lowercase English letters.\n- `0 <= p.size() <= 20`, and `p` contains only lowercase English letters, `.`, and `*`.\n- Every `*` in `p` comes directly after a letter or a `.`.\n- Inputs are passed as function arguments and the answer is returned from the function. Do not read from standard input or print the result.\n",
+  "reference": "bool regex_match(string s, string p) {\n    int n = s.size(), m = p.size();\n    vector<vector<bool>> ok(n + 1, vector<bool>(m + 1, false));\n    ok[n][m] = true;\n    for (int i = n; i >= 0; --i) {\n        for (int j = m - 1; j >= 0; --j) {\n            bool first = i < n && (p[j] == s[i] || p[j] == '.');\n            if (j + 1 < m && p[j + 1] == '*') {\n                ok[i][j] = ok[i][j + 2] || (first && ok[i + 1][j]);\n            } else {\n                ok[i][j] = first && ok[i + 1][j + 1];\n            }\n        }\n    }\n    return ok[0][0];\n}\n",
+  "template": "bool regex_match(string s, string p) {\n    // Return whether the pattern p matches all of s.\n    return false;\n}\n",
+  "tags": [
+    "Strings",
+    "Recursion",
+    "Dynamic Programming"
+  ],
+  "examples": [
+    {
+      "test_number": 0,
+      "explanation": "c* can stand for zero copies of c, a* for two copies of a, and b matches the final b. Together they match the whole string aab."
+    },
+    {
+      "test_number": 1,
+      "explanation": "The pattern is a single a, which matches only one character. The string has two, so the whole string is not matched."
+    }
+  ],
+  "tests": [
+    {
+      "index": 0,
+      "input": {
+        "name": "regex_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "aab"
+            }
+          },
+          {
+            "String": {
+              "Single": "c*a*b"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 1,
+      "input": {
+        "name": "regex_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "aa"
+            }
+          },
+          {
+            "String": {
+              "Single": "a"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 2,
+      "input": {
+        "name": "regex_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "aa"
+            }
+          },
+          {
+            "String": {
+              "Single": "a*"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 3,
+      "input": {
+        "name": "regex_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "ab"
+            }
+          },
+          {
+            "String": {
+              "Single": ".*"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 4,
+      "input": {
+        "name": "regex_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "mississippi"
+            }
+          },
+          {
+            "String": {
+              "Single": "mis*is*p*."
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 5,
+      "input": {
+        "name": "regex_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": ""
+            }
+          },
+          {
+            "String": {
+              "Single": "a*b*"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 6,
+      "input": {
+        "name": "regex_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "abc"
+            }
+          },
+          {
+            "String": {
+              "Single": "abc"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 7,
+      "input": {
+        "name": "regex_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "aaa"
+            }
+          },
+          {
+            "String": {
+              "Single": "a*a"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 8,
+      "input": {
+        "name": "regex_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "ab"
+            }
+          },
+          {
+            "String": {
+              "Single": ".*c"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 9,
+      "input": {
+        "name": "regex_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "a"
+            }
+          },
+          {
+            "String": {
+              "Single": "ab*"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 10,
+      "input": {
+        "name": "regex_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "bbbba"
+            }
+          },
+          {
+            "String": {
+              "Single": ".*a*a"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 11,
+      "input": {
+        "name": "regex_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": ""
+            }
+          },
+          {
+            "String": {
+              "Single": "."
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 12,
+      "input": {
+        "name": "regex_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "aaaaaaaaaaaaaaaaaa"
+            }
+          },
+          {
+            "String": {
+              "Single": "a*a*a*a*a*a*a*a*a*b"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 13,
+      "input": {
+        "name": "regex_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "aaaaaaaaaaaaaaaaaaaa"
+            }
+          },
+          {
+            "String": {
+              "Single": "a*a*a*a*a*a*a*a*a*a*"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 14,
+      "input": {
+        "name": "regex_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "baabbbabbaba"
+            }
+          },
+          {
+            "String": {
+              "Single": "a*.a*"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 15,
+      "input": {
+        "name": "regex_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "baaaababbbaab"
+            }
+          },
+          {
+            "String": {
+              "Single": "aa*."
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 16,
+      "input": {
+        "name": "regex_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "baabbb"
+            }
+          },
+          {
+            "String": {
+              "Single": ".*.aa*"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 17,
+      "input": {
+        "name": "regex_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "bbabbbaababb"
+            }
+          },
+          {
+            "String": {
+              "Single": ".*..b.*a*b"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 18,
+      "input": {
+        "name": "regex_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "aabbbaababbaa"
+            }
+          },
+          {
+            "String": {
+              "Single": ".*b.b.*"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 19,
+      "input": {
+        "name": "regex_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "bbab"
+            }
+          },
+          {
+            "String": {
+              "Single": ".*a.*"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    }
+  ]
+}

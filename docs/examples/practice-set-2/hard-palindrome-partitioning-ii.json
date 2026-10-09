@@ -1,0 +1,286 @@
+{
+  "title": "Palindrome Partitioning II",
+  "description": "A *palindrome* reads the same forwards and backwards. You want to cut the string `s` into pieces so that every piece is a palindrome.\n\nReturn the **smallest number of cuts** needed. A string that is already a palindrome needs `0` cuts.\n\n### Constraints\n\n- `1 <= s.size() <= 1000`\n- `s` contains only lowercase English letters.\n- Inputs are passed as function arguments and the answer is returned from the function. Do not read from standard input or print the result.\n",
+  "reference": "int min_cut(string s) {\n    int n = s.size();\n    vector<vector<bool>> palindrome(n, vector<bool>(n, false));\n    vector<int> cuts(n);\n    for (int end = 0; end < n; ++end) {\n        cuts[end] = end;\n        for (int start = 0; start <= end; ++start) {\n            if (s[start] == s[end] && (end - start < 2 || palindrome[start + 1][end - 1])) {\n                palindrome[start][end] = true;\n                cuts[end] = start == 0 ? 0 : min(cuts[end], cuts[start - 1] + 1);\n            }\n        }\n    }\n    return cuts[n - 1];\n}\n",
+  "template": "int min_cut(string s) {\n    // Return the fewest cuts that split s into palindromes.\n    return 0;\n}\n",
+  "tags": [
+    "Strings",
+    "Dynamic Programming"
+  ],
+  "examples": [
+    {
+      "test_number": 0,
+      "explanation": "One cut after the second letter gives aa | b, and both pieces are palindromes. Zero cuts is not enough because aab itself is not a palindrome."
+    },
+    {
+      "test_number": 1,
+      "explanation": "abcba already reads the same in both directions, so no cut is needed."
+    }
+  ],
+  "tests": [
+    {
+      "index": 0,
+      "input": {
+        "name": "min_cut",
+        "arguments": [
+          {
+            "String": {
+              "Single": "aab"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 1
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 1,
+      "input": {
+        "name": "min_cut",
+        "arguments": [
+          {
+            "String": {
+              "Single": "abcba"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 0
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 2,
+      "input": {
+        "name": "min_cut",
+        "arguments": [
+          {
+            "String": {
+              "Single": "a"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 0
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 3,
+      "input": {
+        "name": "min_cut",
+        "arguments": [
+          {
+            "String": {
+              "Single": "ab"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 1
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 4,
+      "input": {
+        "name": "min_cut",
+        "arguments": [
+          {
+            "String": {
+              "Single": "abcd"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 3
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 5,
+      "input": {
+        "name": "min_cut",
+        "arguments": [
+          {
+            "String": {
+              "Single": "aabbc"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 2
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 6,
+      "input": {
+        "name": "min_cut",
+        "arguments": [
+          {
+            "String": {
+              "Single": "banana"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 1
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 7,
+      "input": {
+        "name": "min_cut",
+        "arguments": [
+          {
+            "String": {
+              "Single": "noonabbad"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 2
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 8,
+      "input": {
+        "name": "min_cut",
+        "arguments": [
+          {
+            "String": {
+              "Single": "aabababbbaabbaabaabbabaabbbbaabbabaabbbb"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 7
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 9,
+      "input": {
+        "name": "min_cut",
+        "arguments": [
+          {
+            "String": {
+              "Single": "bbccacabbcccaacccbaaaccbccaabcaabbcccbbabbabaacccbccccaaaaccaabaababbbcbcaaabcbcbaacacbabcbaaabcbbcabbbcbcaccbaaaaacccabccbbacacbacbaabcabacbbaaaacccbcccbacccbababccbabbacacabacbcbacaaaccbcbabaacbaccc"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 62
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 10,
+      "input": {
+        "name": "min_cut",
+        "arguments": [
+          {
+            "String": {
+              "Single": "abababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababab"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 1
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 11,
+      "input": {
+        "name": "min_cut",
+        "arguments": [
+          {
+            "String": {
+              "Single": "hfhcahaabbfbbghhhgffhgbhceecgaddhhedaehfgabecfcfdbhbgafecageefadbhdhaefbaaggcgdccegdfgbadbhhcechgafdcgbfghhhbfbggbchdbbbcafedbefacfaechggcgghdfedcddgddacggacacefgbbbhegffeefbecbgbcgbabbdfgaagcbeeahhhfbdchfdaghbbhaghhcbhgbhgcbcgfceebhdbagfdafffdcfgdhgahcdecgcbfhgfahhdhdceccfbfcdegfhddecgcefghddegafccadcbebdhehedhachefhggchdeeaehddgacfgdfhfbbgfaagdeccfahfabggbadccfehacgbbhbddffdcadahgbhghecdccbdhgfdhcaefgchbfdggcdffcaabdgeffgdafggcagheeghfdcabaddcaggedbeaceaebebahdhcfchghddbddbbadabghgbchebgcbfbhbfgffadffcehaaebcgefgeceaegaebfbhdhfgbhadhheafbcgdcehdhefedcgdadaedbceahdghccfbddeaggbchhahaabaafgaefhgeaadbcceaghaddehbfcefhcdbadcgfdhfbdffgcghcbfhceeeehhdhfeddbhfegdgaadcahgffcbhgfbgeadfgadabededaadhcfbggddhebbfcaghbahaghhdgcfheceddhdhcadbefdbbchebghagfaaefggafddgcdfagfhcfagcfgbaefcgaeggcaeabfdddfb"
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 563
+        }
+      },
+      "max_fuel": null
+    }
+  ]
+}

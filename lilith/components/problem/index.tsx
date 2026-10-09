@@ -1,16 +1,18 @@
 import dynamic from "next/dynamic";
 import Head from "next/head";
 import Link from "next/link";
-import { createContext } from "react";
+import { createContext, useEffect, useRef } from "react";
 import useSWR from "swr";
 import { Competition } from "../../pages/competitions";
 import { api_url, fetcher } from "../../utils/fetcher";
+import { createDraftSaver, loadDraft } from "../../utils/drafts";
 import { getProblemImpl, Language, useStore } from "../../utils/state";
 import Tabbed from "../tabbed";
 import CodeRunner from "./code-runner";
 import Description from "./description";
 import ProblemLeaderboard from "./leaderboard";
 import SubmissionHistory from "./submission/history";
+import Timer from "./timer";
 import TestContainer from "./submission/tests/container";
 const Editor = dynamic(import("../../components/editor"), { ssr: false });
 
@@ -64,6 +66,39 @@ function ProblemEditorWrapper({
     );
     const setProblemImpl = useStore((state) => state.setProblemImpl);
     const setLanguage = useStore((state) => state.setProblemLanguage);
+    const resetProblemImpl = useStore((state) => state.resetProblemImpl);
+    const saver = useRef(createDraftSaver()).current;
+    const edited = useRef(false);
+
+    // Bring in the draft saved to the account, unless typing has already started here.
+    useEffect(() => {
+        edited.current = false;
+        if (!id) return;
+        let current = true;
+        loadDraft(id, language)
+            .then((code) => {
+                if (!current || edited.current || code === null) return;
+                if (code !== getProblemImpl(useStore.getState(), id, language))
+                    setProblemImpl(id, code, language);
+            })
+            .catch(() => undefined);
+        return () => {
+            current = false;
+            saver.flush();
+        };
+    }, [id, language, saver, setProblemImpl]);
+
+    useEffect(() => {
+        window.addEventListener("pagehide", saver.flush);
+        return () => window.removeEventListener("pagehide", saver.flush);
+    }, [saver]);
+
+    const resetCode = () => {
+        if (!id || !window.confirm("Discard your code for this language and start again from the template?")) return;
+        edited.current = true;
+        resetProblemImpl(id, language);
+        saver.discard(id, language);
+    };
     const generated = language === "cpp" ? undefined : language;
     const { data, error } = useSWR<string>(
         id && generated
@@ -76,7 +111,8 @@ function ProblemEditorWrapper({
     const content = saved ?? (generated ? data : template) ?? "";
     return (
         <div className="bg-white dark:bg-neutral-900 h-full min-h-0 flex flex-col ring-1 md:ring-0 ring-neutral-300 dark:ring-neutral-700">
-            <label className="p-2 border-b border-neutral-300 dark:border-neutral-700">
+            <div className="p-2 border-b border-neutral-300 dark:border-neutral-700 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm sm:text-base">
+            <label>
                 Language{" "}
                 <select
                     aria-label="Submission language"
@@ -91,6 +127,14 @@ function ProblemEditorWrapper({
                     <option value="python">Python</option>
                 </select>
             </label>
+                <button
+                    className="px-2 py-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+                    onClick={resetCode}
+                >
+                    Reset code
+                </button>
+                <span className="ml-auto">{id && <Timer id={id} />}</span>
+            </div>
             {language === "rust" && (
                 <p className="px-2 text-sm">
                     Rust standard library only. Cargo crates are not available.
@@ -115,7 +159,10 @@ function ProblemEditorWrapper({
                     value={content}
                     hideScrollbars={hideEditorScrollbars}
                     onChange={(text) => {
-                        if (id) setProblemImpl(id, text, language);
+                        if (!id) return;
+                        edited.current = true;
+                        setProblemImpl(id, text, language);
+                        saver.schedule(id, language, text);
                     }}
                 />
             </div>

@@ -18,6 +18,7 @@ pub struct UserSubmission {
     problem_title: String,
     success: bool,
     error: Option<String>,
+    verdict: Option<String>,
     runtime: i64,
     code: String,
     time: NaiveDateTime,
@@ -50,12 +51,14 @@ pub async fn submissions(
             submissions.success,
             submissions.runtime,
             submissions.error,
+            submissions.verdict,
             submissions.time,
             submissions.code
         FROM submissions
         JOIN problems ON problems.id = submissions.problem_id
         LEFT JOIN competitions ON competitions.id = problems.competition_id
         WHERE user_id = ?
+        AND submissions.verdict IS NOT 'CompilationError'
         AND (
             problems.competition_id IS NULL
             OR competitions.end < datetime('now')

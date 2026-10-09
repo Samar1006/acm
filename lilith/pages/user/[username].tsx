@@ -5,7 +5,7 @@ import Navbar from "../../components/navbar";
 import Error from "next/error";
 import { api_url, fetcher, FetchError } from "../../utils/fetcher";
 import Link from "next/link";
-import { User, useSession } from "../../utils/state";
+import { User, useSession, verdictLabel } from "../../utils/state";
 import useSWRInfinite from "swr/infinite";
 import { useState } from "react";
 import LoadingButton from "../../components/loading-button";
@@ -37,10 +37,79 @@ type Submission = {
   problem_id: number;
   problem_title: string;
   success: boolean;
+  verdict?: string | null;
   time: string;
   runtime: number;
   code: string;
 };
+
+type ProgressGroup = { name: string, solved: number, total: number };
+
+type Progress = {
+  solved: number;
+  total: number;
+  submissions: number;
+  accepted: number;
+  by_difficulty: ProgressGroup[];
+  by_tag: ProgressGroup[];
+  activity: { day: string, submissions: number, accepted: number }[];
+};
+
+function ProgressBar({ name, solved, total }: ProgressGroup): JSX.Element {
+  return (
+    <div className="text-sm">
+      <div className="flex">
+        <span>{name}</span>
+        <span className="ml-auto tabular-nums">{solved} / {total}</span>
+      </div>
+      <div className="h-2 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
+        <div className="h-full bg-green-600" style={{ width: `${total > 0 ? (100 * solved) / total : 0}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function ProgressSummary({ username }: { username: string }): JSX.Element | null {
+  const { data } = useSWR<Progress>(api_url(`/user/username/${username}/progress`), fetcher);
+
+  if (!data) return null;
+
+  const rate = data.submissions > 0 ? Math.round((100 * data.accepted) / data.submissions) : null;
+
+  return (
+    <section className="flex flex-col gap-4 border-y border-neutral-300 bg-white p-4 dark:border-neutral-700 dark:bg-black sm:m-2 sm:rounded-md sm:border md:m-0">
+      <h2 className="text-2xl font-extrabold">Progress</h2>
+
+      <p>
+        <b>{data.solved}</b> of {data.total} problems solved
+        {rate !== null && <> • {data.submissions} submissions, {rate}% accepted</>}
+      </p>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        {data.by_difficulty.map((group) => <ProgressBar key={group.name} {...group} />)}
+      </div>
+
+      {data.by_tag.length > 0 && <div>
+        <h3 className="font-bold mb-2">By category</h3>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {data.by_tag.map((group) => <ProgressBar key={group.name} {...group} />)}
+        </div>
+      </div>}
+
+      {data.activity.length > 0 && <div>
+        <h3 className="font-bold mb-2">Practice in the last 30 days</h3>
+        <ul className="text-sm flex flex-col gap-1">
+          {data.activity.slice(0, 7).map(({ day, submissions, accepted }) => (
+            <li key={day} className="flex">
+              <span>{day}</span>
+              <span className="ml-auto">{submissions} submission{submissions === 1 ? "" : "s"}, {accepted} accepted</span>
+            </li>
+          ))}
+        </ul>
+      </div>}
+    </section>
+  );
+}
 
 function StarCount({ id }: { id?: number }): JSX.Element {
   const { data } = useSWR<{ count: number }>(
@@ -64,6 +133,7 @@ function SubmissionEntry({
   problem_title,
   time,
   code,
+  verdict,
   language = "cpp",
 }: Submission): JSX.Element {
   let compact = Intl.NumberFormat('en', { notation: "compact" }).format(runtime) + " fuel";
@@ -83,7 +153,7 @@ function SubmissionEntry({
           {success ? (
             <>
               <span className="text-lg font-bold text-green-600">
-                Passed
+                Accepted
               </span>
               {" • "}
               <span title={long}>
@@ -95,7 +165,7 @@ function SubmissionEntry({
           ) : (
             <>
               <span className="text-lg font-bold text-red-600">
-                Failed
+                {verdictLabel({ verdict, success })}
               </span>
               {" • "}
               <SubmissionTime time={time + 'Z'} />
@@ -360,7 +430,10 @@ const UserPage: NextPage = () => {
         )}
 
         {!error && isReady && typeof username === "string" && (
-          <RecentSubmissions username={username} />
+          <div className="flex flex-col gap-4">
+            <ProgressSummary username={username} />
+            <RecentSubmissions username={username} />
+          </div>
         )}
       </main>
 

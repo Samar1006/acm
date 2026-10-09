@@ -28,5 +28,11 @@ pub async fn invalidate(
     .await
     .map_err(|_| ServerError::NotFound)?;
 
+    sqlx::query("UPDATE submissions SET verdict = 'WrongAnswer' WHERE id = ?")
+        .bind(submission_id)
+        .execute(&pool)
+        .await
+        .map_err(|_| ServerError::InternalError)?;
+
     Ok(())
 }

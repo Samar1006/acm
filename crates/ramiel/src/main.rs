@@ -15,6 +15,11 @@ use runners::{CPlusPlus, Python, Runner, Rust, WasmRuntime};
 
 const RUN_TIMEOUT_MESSAGE: &str = "The tests took too long to run. (process killed)";
 
+/// Submissions get 360 seconds; a job may ask for less, never more.
+fn run_deadline(seconds: Option<u64>) -> tokio::time::Instant {
+    tokio::time::Instant::now() + Duration::from_secs(seconds.map_or(360, |s| s.clamp(1, 360)))
+}
+
 #[get("/healthz")]
 async fn healthz() -> HttpResponse {
     HttpResponse::Ok().finish()
@@ -25,13 +30,11 @@ async fn cplusplus_run(
     runner: web::Data<CPlusPlus>,
     form: Json<SubmitJob>,
 ) -> Json<Result<RunnerResponse, RunnerError>> {
+    let form = form.into_inner();
+    let seconds = form.deadline_seconds;
     Json(
         runner
-            .run_tests(
-                form.into_inner(),
-                tokio::time::Instant::now() + Duration::from_secs(360),
-                RUN_TIMEOUT_MESSAGE,
-            )
+            .run_tests(form, run_deadline(seconds), RUN_TIMEOUT_MESSAGE)
             .await,
     )
 }
@@ -73,13 +76,11 @@ async fn rust_run(
     runner: web::Data<Rust>,
     form: Json<SubmitJob>,
 ) -> Json<Result<RunnerResponse, RunnerError>> {
+    let form = form.into_inner();
+    let seconds = form.deadline_seconds;
     Json(
         runner
-            .run_tests(
-                form.into_inner(),
-                tokio::time::Instant::now() + Duration::from_secs(360),
-                RUN_TIMEOUT_MESSAGE,
-            )
+            .run_tests(form, run_deadline(seconds), RUN_TIMEOUT_MESSAGE)
             .await,
     )
 }
@@ -105,13 +106,11 @@ async fn python_run(
     runner: web::Data<Python>,
     form: Json<SubmitJob>,
 ) -> Json<Result<RunnerResponse, RunnerError>> {
+    let form = form.into_inner();
+    let seconds = form.deadline_seconds;
     Json(
         runner
-            .run_tests(
-                form.into_inner(),
-                tokio::time::Instant::now() + Duration::from_secs(360),
-                RUN_TIMEOUT_MESSAGE,
-            )
+            .run_tests(form, run_deadline(seconds), RUN_TIMEOUT_MESSAGE)
             .await,
     )
 }

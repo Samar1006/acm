@@ -5,7 +5,10 @@ use shared::models::test::Test;
 use sqlx::SqlitePool;
 use tokio::sync::broadcast::Sender;
 
-use super::Problem;
+use super::{
+    extras::{replace_examples, replace_tags, ExampleForm},
+    Difficulty, Problem,
+};
 use crate::{auth::Claims, error::ServerError, ws::BroadcastMessage};
 
 #[derive(Deserialize)]
@@ -19,6 +22,12 @@ pub struct NewForm {
     publish_time: Option<NaiveDateTime>,
     competition_id: Option<i64>,
     runtime_multiplier: Option<f64>,
+    difficulty: Option<Difficulty>,
+    #[serde(default)]
+    tags: Vec<String>,
+    /// Tests from this form to publish as worked examples.
+    #[serde(default)]
+    examples: Vec<ExampleForm>,
 }
 
 #[derive(Serialize)]
@@ -109,6 +118,20 @@ pub async fn new(
             ServerError::InternalError
         })?;
     }
+
+    if let Some(difficulty) = &form.difficulty {
+        sqlx::query("UPDATE problems SET difficulty = ? WHERE id = ?")
+            .bind(difficulty)
+            .bind(problem.id)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| {
+                log::error!("{e}");
+                ServerError::InternalError
+            })?;
+    }
+    replace_tags(&mut tx, problem.id, &form.tags).await?;
+    replace_examples(&mut tx, problem.id, &form.examples).await?;
 
     // We only immediately broadcast that there's a new problem if its set to publish immediately
     if form.publish_time.is_none() {

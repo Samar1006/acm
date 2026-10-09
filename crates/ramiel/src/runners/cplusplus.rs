@@ -117,7 +117,7 @@ impl Runner for CPlusPlus {
                 timeout_message,
             )
             .await?;
-            if !test_results.insert(test) {
+            if !test_results.insert(test) && !form.run_all {
                 break;
             }
         }

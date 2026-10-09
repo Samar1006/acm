@@ -261,15 +261,38 @@ test('difficulty checkmarks follow filter state after closing and reopening', ()
 });
 
 test('problem search preserves punctuation and cannot change other URL parameters', () => {
-  const h = component('pages/problems/index.tsx', '\nexports.ProblemSearchResults = ProblemSearchResults;');
+  const h = component('pages/problems/index.tsx');
   for (const query of ['C++', 'a&count=500', 'name#part', 'résumé 100%']) {
-    h.render(h.exports.ProblemSearchResults, { query });
-    h.fetchers.at(-1)();
-    const url = new URL(h.requests.at(-1)[0]);
-    assert.equal(url.searchParams.get('query'), query);
-    assert.equal(url.searchParams.get('count'), '10');
-    assert.equal(url.searchParams.size, 2);
+    const params = new URLSearchParams(h.exports.filterParams({ ...h.exports.noFilters, query }));
+    assert.equal(params.get('query'), query);
+    assert.equal(params.get('count'), null);
+    assert.deepEqual([...params.keys()].sort(), ['difficulty', 'query', 'sort_by']);
   }
+  const all = new URLSearchParams(h.exports.filterParams({ query: ' two sum ', difficulty: 5, tags: ['Arrays', 'Hash Tables'],
+    status: 'unsolved', bookmarked: true, showCompetitionProblems: true, sortBy: 'Title' }));
+  assert.deepEqual(Object.fromEntries(all), { difficulty: '5', sort_by: 'Title', query: 'two sum', tags: 'Arrays,Hash Tables',
+    status: 'unsolved', bookmarked: 'true', show_competition_problems: 'true' });
+});
+
+test('new problem filters have labelled controls, and Clear all restores the defaults', () => {
+  const h = component('pages/problems/index.tsx');
+  h.swrResult = { data: [{ name: 'Arrays', count: 2 }] };
+  const filters = () => h.values[0];
+  find(h.render(), node => node.type === 'button' && node.props.children === 'Filters').props.onClick();
+  h.values[1] = true; // mounted, so the signed-in controls render
+  let tree = h.render();
+  assert.equal(find(tree, node => node.type === 'button' && node.props.children === 'Clear all filters'), undefined);
+  for (const [label, id] of [['Unsolved', 'status-unsolved'], ['Bookmarked', 'bookmarked'], ['A to Z', 'by-title']]) {
+    assert.equal(find(tree, node => node.type === 'label' && node.props.children === label)?.props.htmlFor, id);
+    find(tree, node => node.type === 'input' && node.props.id === id).props.onChange();
+  }
+  find(tree, node => node.type === 'button' && node.props['aria-pressed'] === false).props.onClick();
+  // Compared as JSON because the page's objects come from another realm.
+  assert.equal(JSON.stringify(filters()), JSON.stringify({ ...h.exports.noFilters, status: 'unsolved', bookmarked: true, sortBy: 'Title', tags: ['Arrays'] }));
+  tree = h.render();
+  assert.equal(find(tree, node => node.type === 'button' && node.props['aria-pressed'] === true).type, 'button');
+  find(tree, node => node.type === 'button' && node.props.children === 'Clear all filters').props.onClick();
+  assert.equal(JSON.stringify(filters()), JSON.stringify(h.exports.noFilters));
 });
 
 for (const [state, result, message] of [
@@ -285,23 +308,25 @@ for (const [state, result, message] of [
 }
 
 test('empty problem search reports no matches', () => {
-  const h = component('pages/problems/index.tsx', '\nexports.ProblemSearchResults = ProblemSearchResults;');
-  h.swrResult = { data: [] };
-  assert.ok(find(h.render(h.exports.ProblemSearchResults, { query: 'missing' }), node => node.props?.children === 'No problems found.'));
+  const h = component('pages/problems/index.tsx');
+  h.infiniteResult.data = [[]];
+  const filters = { ...h.exports.noFilters, query: 'missing' };
+  assert.ok(find(h.render(h.exports.ProblemResults, { filters }), node => node.props?.children === 'No problems found.'));
 });
 
 test('problem pagination stops after an empty page without hiding previous results', () => {
-  const h = component('pages/problems/index.tsx', '\nexports.ProblemInfiniteResults = ProblemInfiniteResults;');
+  const h = component('pages/problems/index.tsx');
+  const props = { filters: h.exports.noFilters };
   const problem = { id: 9 };
   for (const pages of [[[]], [[problem], []]]) {
     h.infiniteResult.data = pages;
-    const tree = h.render(h.exports.ProblemInfiniteResults, {});
+    const tree = h.render(h.exports.ProblemResults, props);
     assert.equal(find(tree, node => node.props?.children === 'Load more'), undefined);
     if (pages.length === 1) assert.ok(find(tree, node => node.props?.children === 'No problems found.'));
     else assert.ok(find(tree, node => node.props?.problems?.[0] === problem));
   }
   h.infiniteResult.data = [[problem]];
-  assert.ok(find(h.render(h.exports.ProblemInfiniteResults, {}), node => node.props?.children === 'Load more'));
+  assert.ok(find(h.render(h.exports.ProblemResults, props), node => node.props?.children === 'Load more'));
 });
 
 for (const status of [undefined, 500, 404]) {

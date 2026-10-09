@@ -5,15 +5,20 @@ use serde::Deserialize;
 use serde_json::Value;
 use shared::models::{
     forms::SubmitJob,
-    language::{Language, RustSignature},
-    python::PythonSignature,
+    language::Language,
     runner::{RunnerError, RunnerResponse},
     test::Test,
 };
 use sqlx::SqlitePool;
 use tokio::sync::broadcast::Sender;
 
-use crate::{auth::Claims, error::ServerError, submissions::Submission, ws::BroadcastMessage};
+use crate::{
+    auth::Claims,
+    error::ServerError,
+    problems::extras::{example_rows, visible_problem},
+    submissions::Submission,
+    ws::BroadcastMessage,
+};
 
 use super::{add_job, JobMap, JobQueue, JobStatus, Queueable};
 
@@ -64,14 +69,24 @@ pub async fn submit(
             .await
             .map_err(|_| ServerError::NotFound)?;
 
-    match form.language {
-        Language::Cpp => {}
-        Language::Rust => {
-            RustSignature::from_calls(tests.iter().map(|test| &test.input))?;
-        }
-        Language::Python => {
-            PythonSignature::from_calls(tests.iter().map(|test| &test.input))?;
-        }
+    super::check_signature(form.language, tests.iter().map(|test| &test.input))?;
+
+    // Students must pass the public examples with this exact code first.
+    // Officers are exempt so they can verify references and templates.
+    let (_, require_tests) = visible_problem(&pool, form.problem_id, &claims).await?;
+    if require_tests
+        && claims.validate_officer().is_err()
+        && !example_rows(&pool, form.problem_id).await?.is_empty()
+        && !super::examples::has_passed(
+            &pool,
+            claims.user_id,
+            form.problem_id,
+            form.language,
+            &form.implementation,
+        )
+        .await?
+    {
+        return Err(ServerError::TestsRequired);
     }
 
     let queue_item = Box::new(SubmitJob {
@@ -81,11 +96,35 @@ pub async fn submit(
         implementation: form.implementation.clone(),
         tests,
         runtime_multiplier,
+        run_all: false,
+        deadline_seconds: None,
     });
 
     let job = add_job(claims.user_id, job_queue, job_map, queue_item, broadcast).await?;
 
     Ok(Json(job))
+}
+
+/// The outcome shown to the student and stored with the submission.
+/// Compilation errors are stored for their author but never counted.
+fn verdict(result: &Result<RunnerResponse, RunnerError>) -> &'static str {
+    match result {
+        Ok(response) if response.passed => "Accepted",
+        Ok(response) => match response
+            .tests
+            .iter()
+            .find(|test| !test.success)
+            .and_then(|test| test.error.as_deref())
+        {
+            Some(error) if error.to_lowercase().contains("fuel") => "TimeLimitExceeded",
+            Some(_) => "RuntimeError",
+            None => "WrongAnswer",
+        },
+        Err(RunnerError::CompilationError { .. }) => "CompilationError",
+        Err(RunnerError::TimeoutError { .. }) => "TimeLimitExceeded",
+        Err(RunnerError::RuntimeError { .. }) => "RuntimeError",
+        Err(_) => "InternalError",
+    }
 }
 
 #[async_trait]
@@ -112,6 +151,7 @@ impl Queueable for SubmitJob {
             ServerError::InternalError
         })?;
 
+        let verdict = verdict(&res);
         let (passed, runtime, error, tests) = match res {
             Ok(res) => (res.passed, res.runtime, None, res.tests),
             Err(err) => {
@@ -155,9 +195,10 @@ impl Queueable for SubmitJob {
                 code,
                 time,
                 complexity,
-                language
+                language,
+                verdict
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             RETURNING *
             "#,
         )
@@ -170,6 +211,7 @@ impl Queueable for SubmitJob {
         .bind(now)
         .bind(complexity)
         .bind(self.language)
+        .bind(verdict)
         .fetch_one(&mut *tx)
         .await
         .map_err(|e| {

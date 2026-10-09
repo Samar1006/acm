@@ -59,6 +59,7 @@ impl Runner for Rust {
         )
         .await?;
         let mut results = TestResults::new();
+        let run_all = form.run_all;
         for mut test in form.tests {
             test.adjust_runtime(form.runtime_multiplier);
             test.max_fuel = Language::Rust.fuel_limit(test.max_fuel);
@@ -72,7 +73,7 @@ impl Runner for Rust {
                 timeout_message,
             )
             .await?;
-            if !results.insert(result) {
+            if !results.insert(result) && !run_all {
                 break;
             }
         }

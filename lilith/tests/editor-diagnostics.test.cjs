@@ -142,24 +142,28 @@ test('initialization gets ten seconds and one retry; ready starts the separate p
 });
 
 test('Submit and Run finish every compiler check, preserving prior errors on transport failure', async () => {
-  for (const [file, handler] of [['code-runner.tsx', 'submitProblem'], ['input-tester.tsx', 'testInput']]) {
+  // Custom tests run through `run`, which calls `runCase` once per case.
+  for (const [file, handler, helper] of [['code-runner.tsx', 'submitProblem'], ['code-runner.tsx', 'runExamples'], ['input-tester.tsx', 'run', 'runCase']]) {
     const tree = ts.createSourceFile(file, fs.readFileSync(path.join(root, 'components/problem', file), 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-    let body;
-    const visit = node => { if (ts.isVariableDeclaration(node) && node.name.getText(tree) === handler) body = node.initializer.getText(tree); ts.forEachChild(node, visit); };
-    visit(tree); assert.ok(body);
-    const code = ts.transpileModule(`(${body})()`, { compilerOptions: { target: ts.ScriptTarget.ES2020 } }).outputText;
+    const bodies = {};
+    const visit = node => { if (ts.isVariableDeclaration(node) && [handler, helper].includes(node.name.getText(tree))) bodies[node.name.getText(tree)] = node.initializer.getText(tree); ts.forEachChild(node, visit); };
+    visit(tree); assert.ok(bodies[handler]);
+    const source = helper ? `const ${helper} = ${bodies[helper]}; (${bodies[handler]})([{ key: 1, args: [] }, { key: 2, args: [] }])` : `(${bodies[handler]})()`;
+    const code = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2020 } }).outputText;
     for (const failure of ['http', 'network', 'json', 'poll', 'success', 'compiler']) {
       const request = {}, finished = [], state = { compilerError: 'previous compiler error', beginCompilerCheck: () => request,
         finishCompilerCheck: (...args) => finished.push(args) };
       let loading;
       await vm.runInNewContext(code, { implementation: 'x', language: 'cpp', id: 1, problem_id: 1, input: {},
         useSession: { getState: () => state }, setLoading: value => { loading = value; },
+        running: null, format: {}, setOutcome() {}, setRunning: value => { loading = value !== null; },
+        setExampleResults() {}, setExampleError() {}, locked: false, loading: false,
         fetch: async () => { if (failure === 'network') throw new Error('network'); return { ok: failure !== 'http', json: async () => { if (failure === 'json') throw new Error('JSON'); return {}; } }; },
         monitorJob: async () => { if (failure === 'poll') throw new Error('poll'); return failure === 'compiler' ? [null, 'new compiler error'] : [{}, null]; },
         api_url: x => x, setTimeout: () => {}, console: { log() {} }, setError() {}, setResultError() {}, setTestResult() {}, setQueuePosition() {},
       });
       assert.equal(loading, false);
-      assert.equal(finished.length, 1, `${file}: ${failure}`);
+      assert.equal(finished.length, 1, `${file} ${handler}: ${failure}`);
       assert.equal(finished[0][0], request);
       if (failure === 'success') assert.equal(finished[0][1] == null, true);
       else assert.equal(finished[0][1], failure === 'compiler' ? 'new compiler error' : 'previous compiler error');

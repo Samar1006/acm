@@ -153,6 +153,16 @@ Python submissions use plain `int`, `float`, `bool`, `str`, and `list` values wi
 
 ---
 
+## Practice features
+
+- **Examples and Tests.** Each problem can publish worked examples, which are copies of its own visible tests with an explanation. The **Tests** button runs the current code on them without creating a submission. Students must pass them with the exact code they submit; the API enforces this. Officers set it per problem in the editor (default: required, except for competition problems) and are exempt themselves.
+- **Tags and filters.** Problems carry tags. The Problems page filters by tag, difficulty, solved state, and bookmarks, sorts by date, difficulty, or title, and can open a random unsolved problem.
+- **Verdicts.** Submissions are labelled Accepted, Wrong Answer, Runtime Error, Time Limit Exceeded, or Compilation Error. Compilation errors stay in the author's own history but are left out of public lists and statistics. The runner does not measure memory, so only fuel is shown.
+- **Drafts, timer, custom tests.** Code is saved in the browser as you type and to your account a few seconds after you stop, per problem and language. The editor has an optional timer and a **Reset code** button. The console runs your own inputs against the reference solution.
+- **Progress.** Profiles show solved counts by difficulty and tag and recent activity.
+
+Fixtures for the practice sets are in [docs/examples](docs/examples/). `tags` and `examples` in a fixture are optional; each example names one of the fixture's tests by `test_number`.
+
 ## Repository map
 
 | Path | Purpose |

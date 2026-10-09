@@ -1,0 +1,644 @@
+{
+  "title": "Word Break II",
+  "description": "Given a string `s` and a list of dictionary words `words`, find every way to insert spaces into `s` so that each resulting piece is a dictionary word. A dictionary word may be used any number of times.\n\nReturn each way as one sentence: its words in order, separated by single spaces. Return the sentences in ascending alphabetical order (ordinary string comparison, where a space sorts before every letter). If `s` cannot be split at all, return an empty list.\n\n### Constraints\n\n- `1 <= s.size() <= 20`\n- `1 <= words.size() <= 12`\n- `1 <= words[i].size() <= 10`\n- `s` and every word contain only lowercase English letters, and the words are all different.\n- No test has more than 400 sentences.\n- Inputs are passed as function arguments and the answer is returned from the function. Do not read from standard input or print the result.\n",
+  "reference": "void build(const string& s, const vector<string>& words, size_t start, const vector<bool>& reachable, string& sentence, vector<string>& out) {\n    if (start == s.size()) {\n        out.push_back(sentence);\n        return;\n    }\n    for (const string& word : words) {\n        size_t next = start + word.size();\n        if (next <= s.size() && reachable[next] && s.compare(start, word.size(), word) == 0) {\n            size_t before = sentence.size();\n            if (!sentence.empty()) {\n                sentence += ' ';\n            }\n            sentence += word;\n            build(s, words, next, reachable, sentence, out);\n            sentence.resize(before);\n        }\n    }\n}\n\nvector<string> word_break_sentences(string s, vector<string> words) {\n    size_t n = s.size();\n    // reachable[i]: the rest of s from position i can be split into words.\n    vector<bool> reachable(n + 1, false);\n    reachable[n] = true;\n    for (size_t start = n; start-- > 0;) {\n        for (const string& word : words) {\n            size_t next = start + word.size();\n            if (next <= n && reachable[next] && s.compare(start, word.size(), word) == 0) {\n                reachable[start] = true;\n                break;\n            }\n        }\n    }\n    vector<string> out;\n    string sentence;\n    if (reachable[0]) {\n        build(s, words, 0, reachable, sentence, out);\n    }\n    sort(out.begin(), out.end());\n    return out;\n}\n",
+  "template": "vector<string> word_break_sentences(string s, vector<string> words) {\n    // Return every sentence that spells s with dictionary words, in alphabetical order.\n    return {};\n}\n",
+  "tags": [
+    "Strings",
+    "Backtracking",
+    "Dynamic Programming",
+    "Hash Tables"
+  ],
+  "examples": [
+    {
+      "test_number": 0,
+      "explanation": "The string can be read as cat + sand + dog or as cats + and + dog. Both use only dictionary words, so both sentences are returned."
+    },
+    {
+      "test_number": 1,
+      "explanation": "There are three ways to split the string: pine + apple + pen + apple, pine + applepen + apple, and pineapple + pen + apple."
+    }
+  ],
+  "tests": [
+    {
+      "index": 0,
+      "input": {
+        "name": "word_break_sentences",
+        "arguments": [
+          {
+            "String": {
+              "Single": "catsanddog"
+            }
+          },
+          {
+            "String": {
+              "List": [
+                "cat",
+                "cats",
+                "and",
+                "sand",
+                "dog"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "String": "List"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "List": [
+            "cat sand dog",
+            "cats and dog"
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 1,
+      "input": {
+        "name": "word_break_sentences",
+        "arguments": [
+          {
+            "String": {
+              "Single": "pineapplepenapple"
+            }
+          },
+          {
+            "String": {
+              "List": [
+                "apple",
+                "pen",
+                "applepen",
+                "pine",
+                "pineapple"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "String": "List"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "List": [
+            "pine apple pen apple",
+            "pine applepen apple",
+            "pineapple pen apple"
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 2,
+      "input": {
+        "name": "word_break_sentences",
+        "arguments": [
+          {
+            "String": {
+              "Single": "catsandog"
+            }
+          },
+          {
+            "String": {
+              "List": [
+                "cats",
+                "dog",
+                "sand",
+                "and",
+                "cat"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "String": "List"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "List": []
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 3,
+      "input": {
+        "name": "word_break_sentences",
+        "arguments": [
+          {
+            "String": {
+              "Single": "a"
+            }
+          },
+          {
+            "String": {
+              "List": [
+                "a"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "String": "List"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "List": [
+            "a"
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 4,
+      "input": {
+        "name": "word_break_sentences",
+        "arguments": [
+          {
+            "String": {
+              "Single": "aaaa"
+            }
+          },
+          {
+            "String": {
+              "List": [
+                "a",
+                "aa"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "String": "List"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "List": [
+            "a a a a",
+            "a a aa",
+            "a aa a",
+            "aa a a",
+            "aa aa"
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 5,
+      "input": {
+        "name": "word_break_sentences",
+        "arguments": [
+          {
+            "String": {
+              "Single": "abcd"
+            }
+          },
+          {
+            "String": {
+              "List": [
+                "a",
+                "abc",
+                "b",
+                "cd"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "String": "List"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "List": [
+            "a b cd"
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 6,
+      "input": {
+        "name": "word_break_sentences",
+        "arguments": [
+          {
+            "String": {
+              "Single": "aaaaaaaaaaaaaaab"
+            }
+          },
+          {
+            "String": {
+              "List": [
+                "a",
+                "aa",
+                "aaa",
+                "aaaa"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "String": "List"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "List": []
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 7,
+      "input": {
+        "name": "word_break_sentences",
+        "arguments": [
+          {
+            "String": {
+              "Single": "thisisatest"
+            }
+          },
+          {
+            "String": {
+              "List": [
+                "this",
+                "is",
+                "a",
+                "test",
+                "at",
+                "his",
+                "t"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "String": "List"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "List": [
+            "t his is a test",
+            "this is a test"
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 8,
+      "input": {
+        "name": "word_break_sentences",
+        "arguments": [
+          {
+            "String": {
+              "Single": "abababab"
+            }
+          },
+          {
+            "String": {
+              "List": [
+                "ab",
+                "abab",
+                "ba"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "String": "List"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "List": [
+            "ab ab ab ab",
+            "ab ab abab",
+            "ab abab ab",
+            "abab ab ab",
+            "abab abab"
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 9,
+      "input": {
+        "name": "word_break_sentences",
+        "arguments": [
+          {
+            "String": {
+              "Single": "aaaaaaaaaa"
+            }
+          },
+          {
+            "String": {
+              "List": [
+                "a",
+                "aa",
+                "aaa"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "String": "List"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "List": [
+            "a a a a a a a a a a",
+            "a a a a a a a a aa",
+            "a a a a a a a aa a",
+            "a a a a a a a aaa",
+            "a a a a a a aa a a",
+            "a a a a a a aa aa",
+            "a a a a a a aaa a",
+            "a a a a a aa a a a",
+            "a a a a a aa a aa",
+            "a a a a a aa aa a",
+            "a a a a a aa aaa",
+            "a a a a a aaa a a",
+            "a a a a a aaa aa",
+            "a a a a aa a a a a",
+            "a a a a aa a a aa",
+            "a a a a aa a aa a",
+            "a a a a aa a aaa",
+            "a a a a aa aa a a",
+            "a a a a aa aa aa",
+            "a a a a aa aaa a",
+            "a a a a aaa a a a",
+            "a a a a aaa a aa",
+            "a a a a aaa aa a",
+            "a a a a aaa aaa",
+            "a a a aa a a a a a",
+            "a a a aa a a a aa",
+            "a a a aa a a aa a",
+            "a a a aa a a aaa",
+            "a a a aa a aa a a",
+            "a a a aa a aa aa",
+            "a a a aa a aaa a",
+            "a a a aa aa a a a",
+            "a a a aa aa a aa",
+            "a a a aa aa aa a",
+            "a a a aa aa aaa",
+            "a a a aa aaa a a",
+            "a a a aa aaa aa",
+            "a a a aaa a a a a",
+            "a a a aaa a a aa",
+            "a a a aaa a aa a",
+            "a a a aaa a aaa",
+            "a a a aaa aa a a",
+            "a a a aaa aa aa",
+            "a a a aaa aaa a",
+            "a a aa a a a a a a",
+            "a a aa a a a a aa",
+            "a a aa a a a aa a",
+            "a a aa a a a aaa",
+            "a a aa a a aa a a",
+            "a a aa a a aa aa",
+            "a a aa a a aaa a",
+            "a a aa a aa a a a",
+            "a a aa a aa a aa",
+            "a a aa a aa aa a",
+            "a a aa a aa aaa",
+            "a a aa a aaa a a",
+            "a a aa a aaa aa",
+            "a a aa aa a a a a",
+            "a a aa aa a a aa",
+            "a a aa aa a aa a",
+            "a a aa aa a aaa",
+            "a a aa aa aa a a",
+            "a a aa aa aa aa",
+            "a a aa aa aaa a",
+            "a a aa aaa a a a",
+            "a a aa aaa a aa",
+            "a a aa aaa aa a",
+            "a a aa aaa aaa",
+            "a a aaa a a a a a",
+            "a a aaa a a a aa",
+            "a a aaa a a aa a",
+            "a a aaa a a aaa",
+            "a a aaa a aa a a",
+            "a a aaa a aa aa",
+            "a a aaa a aaa a",
+            "a a aaa aa a a a",
+            "a a aaa aa a aa",
+            "a a aaa aa aa a",
+            "a a aaa aa aaa",
+            "a a aaa aaa a a",
+            "a a aaa aaa aa",
+            "a aa a a a a a a a",
+            "a aa a a a a a aa",
+            "a aa a a a a aa a",
+            "a aa a a a a aaa",
+            "a aa a a a aa a a",
+            "a aa a a a aa aa",
+            "a aa a a a aaa a",
+            "a aa a a aa a a a",
+            "a aa a a aa a aa",
+            "a aa a a aa aa a",
+            "a aa a a aa aaa",
+            "a aa a a aaa a a",
+            "a aa a a aaa aa",
+            "a aa a aa a a a a",
+            "a aa a aa a a aa",
+            "a aa a aa a aa a",
+            "a aa a aa a aaa",
+            "a aa a aa aa a a",
+            "a aa a aa aa aa",
+            "a aa a aa aaa a",
+            "a aa a aaa a a a",
+            "a aa a aaa a aa",
+            "a aa a aaa aa a",
+            "a aa a aaa aaa",
+            "a aa aa a a a a a",
+            "a aa aa a a a aa",
+            "a aa aa a a aa a",
+            "a aa aa a a aaa",
+            "a aa aa a aa a a",
+            "a aa aa a aa aa",
+            "a aa aa a aaa a",
+            "a aa aa aa a a a",
+            "a aa aa aa a aa",
+            "a aa aa aa aa a",
+            "a aa aa aa aaa",
+            "a aa aa aaa a a",
+            "a aa aa aaa aa",
+            "a aa aaa a a a a",
+            "a aa aaa a a aa",
+            "a aa aaa a aa a",
+            "a aa aaa a aaa",
+            "a aa aaa aa a a",
+            "a aa aaa aa aa",
+            "a aa aaa aaa a",
+            "a aaa a a a a a a",
+            "a aaa a a a a aa",
+            "a aaa a a a aa a",
+            "a aaa a a a aaa",
+            "a aaa a a aa a a",
+            "a aaa a a aa aa",
+            "a aaa a a aaa a",
+            "a aaa a aa a a a",
+            "a aaa a aa a aa",
+            "a aaa a aa aa a",
+            "a aaa a aa aaa",
+            "a aaa a aaa a a",
+            "a aaa a aaa aa",
+            "a aaa aa a a a a",
+            "a aaa aa a a aa",
+            "a aaa aa a aa a",
+            "a aaa aa a aaa",
+            "a aaa aa aa a a",
+            "a aaa aa aa aa",
+            "a aaa aa aaa a",
+            "a aaa aaa a a a",
+            "a aaa aaa a aa",
+            "a aaa aaa aa a",
+            "a aaa aaa aaa",
+            "aa a a a a a a a a",
+            "aa a a a a a a aa",
+            "aa a a a a a aa a",
+            "aa a a a a a aaa",
+            "aa a a a a aa a a",
+            "aa a a a a aa aa",
+            "aa a a a a aaa a",
+            "aa a a a aa a a a",
+            "aa a a a aa a aa",
+            "aa a a a aa aa a",
+            "aa a a a aa aaa",
+            "aa a a a aaa a a",
+            "aa a a a aaa aa",
+            "aa a a aa a a a a",
+            "aa a a aa a a aa",
+            "aa a a aa a aa a",
+            "aa a a aa a aaa",
+            "aa a a aa aa a a",
+            "aa a a aa aa aa",
+            "aa a a aa aaa a",
+            "aa a a aaa a a a",
+            "aa a a aaa a aa",
+            "aa a a aaa aa a",
+            "aa a a aaa aaa",
+            "aa a aa a a a a a",
+            "aa a aa a a a aa",
+            "aa a aa a a aa a",
+            "aa a aa a a aaa",
+            "aa a aa a aa a a",
+            "aa a aa a aa aa",
+            "aa a aa a aaa a",
+            "aa a aa aa a a a",
+            "aa a aa aa a aa",
+            "aa a aa aa aa a",
+            "aa a aa aa aaa",
+            "aa a aa aaa a a",
+            "aa a aa aaa aa",
+            "aa a aaa a a a a",
+            "aa a aaa a a aa",
+            "aa a aaa a aa a",
+            "aa a aaa a aaa",
+            "aa a aaa aa a a",
+            "aa a aaa aa aa",
+            "aa a aaa aaa a",
+            "aa aa a a a a a a",
+            "aa aa a a a a aa",
+            "aa aa a a a aa a",
+            "aa aa a a a aaa",
+            "aa aa a a aa a a",
+            "aa aa a a aa aa",
+            "aa aa a a aaa a",
+            "aa aa a aa a a a",
+            "aa aa a aa a aa",
+            "aa aa a aa aa a",
+            "aa aa a aa aaa",
+            "aa aa a aaa a a",
+            "aa aa a aaa aa",
+            "aa aa aa a a a a",
+            "aa aa aa a a aa",
+            "aa aa aa a aa a",
+            "aa aa aa a aaa",
+            "aa aa aa aa a a",
+            "aa aa aa aa aa",
+            "aa aa aa aaa a",
+            "aa aa aaa a a a",
+            "aa aa aaa a aa",
+            "aa aa aaa aa a",
+            "aa aa aaa aaa",
+            "aa aaa a a a a a",
+            "aa aaa a a a aa",
+            "aa aaa a a aa a",
+            "aa aaa a a aaa",
+            "aa aaa a aa a a",
+            "aa aaa a aa aa",
+            "aa aaa a aaa a",
+            "aa aaa aa a a a",
+            "aa aaa aa a aa",
+            "aa aaa aa aa a",
+            "aa aaa aa aaa",
+            "aa aaa aaa a a",
+            "aa aaa aaa aa",
+            "aaa a a a a a a a",
+            "aaa a a a a a aa",
+            "aaa a a a a aa a",
+            "aaa a a a a aaa",
+            "aaa a a a aa a a",
+            "aaa a a a aa aa",
+            "aaa a a a aaa a",
+            "aaa a a aa a a a",
+            "aaa a a aa a aa",
+            "aaa a a aa aa a",
+            "aaa a a aa aaa",
+            "aaa a a aaa a a",
+            "aaa a a aaa aa",
+            "aaa a aa a a a a",
+            "aaa a aa a a aa",
+            "aaa a aa a aa a",
+            "aaa a aa a aaa",
+            "aaa a aa aa a a",
+            "aaa a aa aa aa",
+            "aaa a aa aaa a",
+            "aaa a aaa a a a",
+            "aaa a aaa a aa",
+            "aaa a aaa aa a",
+            "aaa a aaa aaa",
+            "aaa aa a a a a a",
+            "aaa aa a a a aa",
+            "aaa aa a a aa a",
+            "aaa aa a a aaa",
+            "aaa aa a aa a a",
+            "aaa aa a aa aa",
+            "aaa aa a aaa a",
+            "aaa aa aa a a a",
+            "aaa aa aa a aa",
+            "aaa aa aa aa a",
+            "aaa aa aa aaa",
+            "aaa aa aaa a a",
+            "aaa aa aaa aa",
+            "aaa aaa a a a a",
+            "aaa aaa a a aa",
+            "aaa aaa a aa a",
+            "aaa aaa a aaa",
+            "aaa aaa aa a a",
+            "aaa aaa aa aa",
+            "aaa aaa aaa a"
+          ]
+        }
+      },
+      "max_fuel": null
+    }
+  ]
+}

@@ -182,6 +182,8 @@ Ramiel applies these request deadlines:
 
 A submission stops at its first failed test, in test order. Later tests are not run, so the response and the stored results contain only the tests up to and including that failure. Custom input and test generation are unaffected.
 
+A `/run/<language>` job may set `run_all` to run every test regardless of failures, and `deadline_seconds` to use a deadline shorter than 360 seconds. The API uses both when it runs a problem's public examples.
+
 Compose runs the container with a read-only root filesystem and an executable 512 MiB `/tmp` tmpfs. It limits the container to 2 CPUs, 2 GiB memory, and 256 processes. These controls do not guarantee that untrusted code is safe.
 
 ## Focused commands

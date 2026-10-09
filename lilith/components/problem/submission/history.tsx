@@ -4,7 +4,7 @@ import useSWRInfinite from "swr/infinite";
 import { ShareButton } from ".";
 import { ProblemIDContext } from "..";
 import { api_url, fetcher } from "../../../utils/fetcher";
-import { Language, Submission, useSession, useStore } from "../../../utils/state";
+import { Language, Submission, useSession, useStore, verdictLabel } from "../../../utils/state";
 import { timeFormat } from "../../../utils/time";
 import LoadingButton from "../../loading-button";
 import { isServerError, RunnerError, ServerError } from "./error";
@@ -54,13 +54,15 @@ function HistoryEntry({
     time,
     error,
     runtime,
+    verdict,
     language = "cpp"
 }: Submission): JSX.Element {
+    const label = verdictLabel({ verdict, success, error });
     if (error) {
         return (
             <div className="flex gap-2 items-center bg-red-100 dark:bg-red-900 p-4 border-neutral-300 dark:border-red-700 border-b">
                 <span className="text-red-600 dark:text-red-200 font-bold text-lg">
-                    Error ({languageLabel(language)})
+                    {label} ({languageLabel(language)})
                 </span>
                 <span className="ml-auto text-red-600 dark:text-red-200 text-sm">
                     {timeFormat(time + 'Z')}
@@ -78,7 +80,7 @@ function HistoryEntry({
         return (
             <div className="flex gap-2 items-center bg-white dark:bg-black p-4 border-neutral-300 dark:border-emerald-700 border-b">
                 <span className="font-bold text-lg text-green-600 dark:text-green-400">
-                    Passed ({languageLabel(language)})
+                    {label} ({languageLabel(language)})
                 </span>
 
                 <span className="text-sm text-green-600 dark:text-green-400" title={fuelLong}>{fuelCompact}</span>
@@ -93,7 +95,7 @@ function HistoryEntry({
         return (
             <div className="flex gap-2 items-center bg-white dark:bg-black p-4 border-neutral-300 dark:border-neutral-700 border-b">
                 <span className="text-red-700 dark:text-red-400 font-bold text-lg">
-                    Failed ({languageLabel(language)})
+                    {label} ({languageLabel(language)})
                 </span>
                 <span className="ml-auto text-sm text-neutral-500 dark:text-emerald-200">
                     {timeFormat(time + 'Z')}

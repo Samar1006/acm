@@ -1,3 +1,4 @@
+import { ProblemMeta } from "../../../components/problem/examples";
 import type { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
@@ -41,7 +42,25 @@ const ProblemEditor: NextPage = () => {
     const [title, setTitle] = useState("");
     const [runtimeMultiplier, setRuntimeMultiplier] = useState(1.0);
     const [visible, setVisible] = useState(false);
+    const [tags, setTags] = useState("");
+    const [requireTests, setRequireTests] = useState("default");
+    // Each example is one of the problem's visible tests plus a short explanation.
+    const [examples, setExamples] = useState([{ test: "", explanation: "" }, { test: "", explanation: "" }]);
+    const [replaceExamples, setReplaceExamples] = useState(false);
+    const [saveError, setSaveError] = useState("");
     const router = useRouter();
+
+    const { data: meta } = useSWR<ProblemMeta>(
+        id ? api_url(`/problems/${id}/meta`) : null,
+        fetcher
+    );
+
+    useEffect(() => {
+        if (meta) {
+            setTags(meta.tags.join(", "));
+            setRequireTests(meta.require_tests_setting);
+        }
+    }, [meta]);
 
     const { data } = useSWR<Problem>(
         id ? api_url(`/problems/${id}`) : null,
@@ -66,7 +85,7 @@ const ProblemEditor: NextPage = () => {
     const submit = async () => {
         if (!id) return;
 
-        await fetch(api_url(`/problems/${id}/edit`), {
+        const response = await fetch(api_url(`/problems/${id}/edit`), {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -78,9 +97,21 @@ const ProblemEditor: NextPage = () => {
                 template,
                 visible,
                 difficulty,
-                runtime_multiplier: runtimeMultiplier
+                runtime_multiplier: runtimeMultiplier,
+                tags: tags.split(",").map((tag) => tag.trim()).filter(Boolean),
+                require_tests: requireTests,
+                examples: replaceExamples
+                    ? examples.filter(({ test }) => test.trim() !== "")
+                        .map(({ test, explanation }) => ({ test_number: parseInt(test), explanation }))
+                    : undefined,
             })
         });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => null);
+            setSaveError(error?.error ?? "Could not save the problem.");
+            return;
+        }
 
         router.push(`/problems/${id}`);
     };
@@ -105,7 +136,7 @@ const ProblemEditor: NextPage = () => {
 
                 <RenderedDescription description={description} />
 
-                <div className="flex flex-col">
+                <div className="flex flex-col overflow-y-auto">
                     <div className="p-4">
                         <h1 className="font-bold mb-2">Title</h1>
                         <input
@@ -118,6 +149,54 @@ const ProblemEditor: NextPage = () => {
 
                     <div className="p-4">
                         <h1 className="font-bold mb-2">Tags</h1>
+                        <input
+                            className="w-full border-neutral-300 dark:border-neutral-700 border rounded p-2 bg-neutral-50 dark:bg-neutral-900 outline-0 transition-shadow focus:ring dark:ring-neutral-700 ring-neutral-300"
+                            onChange={(event) => setTags(event.currentTarget.value)}
+                            value={tags}
+                            placeholder="Arrays, Dynamic Programming"
+                            aria-label="Tags, separated by commas"
+                        />
+                    </div>
+
+                    <div className="p-4">
+                        <h1 className="font-bold mb-2">Tests before Submit</h1>
+                        <select
+                            className="w-full border-neutral-300 dark:border-neutral-700 border rounded p-2 bg-neutral-50 dark:bg-neutral-900"
+                            value={requireTests}
+                            onChange={(event) => setRequireTests(event.currentTarget.value)}
+                            aria-label="Require passing the examples before Submit"
+                        >
+                            <option value="default">Default (required, except in competitions)</option>
+                            <option value="on">Always required</option>
+                            <option value="off">Not required</option>
+                        </select>
+                    </div>
+
+                    <div className="p-4">
+                        <h1 className="font-bold mb-2">Examples</h1>
+                        <p className="text-sm mb-2">This problem has {meta?.example_count ?? 0} published example(s).</p>
+                        <div className="flex gap-2 mb-2">
+                            <input type="checkbox" id="replace-examples" checked={replaceExamples} onChange={() => setReplaceExamples(!replaceExamples)} />
+                            <label htmlFor="replace-examples">Replace them</label>
+                        </div>
+                        {replaceExamples && examples.map((example, i) => (
+                            <div key={i} className="flex flex-col gap-1 mb-2">
+                                <input
+                                    className="border-neutral-300 dark:border-neutral-700 border rounded p-2 bg-neutral-50 dark:bg-neutral-900"
+                                    type="number"
+                                    min="0"
+                                    value={example.test}
+                                    placeholder={`Example ${i + 1}: number of a visible test`}
+                                    onChange={(event) => setExamples(examples.map((other, j) => j === i ? { ...other, test: event.target.value } : other))}
+                                />
+                                <textarea
+                                    className="border-neutral-300 dark:border-neutral-700 border rounded p-2 bg-neutral-50 dark:bg-neutral-900"
+                                    value={example.explanation}
+                                    placeholder="Why this output is correct"
+                                    onChange={(event) => setExamples(examples.map((other, j) => j === i ? { ...other, explanation: event.target.value } : other))}
+                                />
+                            </div>
+                        ))}
                     </div>
 
                     <fieldset className="p-4">
@@ -189,6 +268,8 @@ const ProblemEditor: NextPage = () => {
                             />
                         </div>
                     </div>
+
+                    {saveError && <p role="alert" className="px-4 text-red-600">{saveError}</p>}
 
                     <button onClick={submit} className="mt-auto mb-4 bg-blue-600 text-blue-50 py-2 mx-4 rounded-full hover:bg-blue-500 transition-colors">
                         Update

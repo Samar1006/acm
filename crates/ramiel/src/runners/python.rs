@@ -325,6 +325,7 @@ impl Runner for Python {
         PythonSignature::from_calls(form.tests.iter().map(|test| &test.input))?;
         let implementation: Arc<str> = form.implementation.into();
         let mut results = TestResults::new();
+        let run_all = form.run_all;
         for mut test in form.tests {
             test.adjust_runtime(form.runtime_multiplier);
             test.max_fuel = Language::Python.fuel_limit(test.max_fuel);
@@ -337,7 +338,7 @@ impl Runner for Python {
                     timeout_message,
                 )
                 .await?;
-            if !results.insert(result) {
+            if !results.insert(result) && !run_all {
                 break;
             }
         }
@@ -928,6 +929,8 @@ mod tests {
             implementation: "def add(a, b):\n    return a + b\n".into(),
             runtime_multiplier: None,
             tests,
+            run_all: false,
+            deadline_seconds: None,
         };
         let deadline = tokio::time::Instant::now() + Duration::from_secs(900);
         let response = python

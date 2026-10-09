@@ -8,7 +8,8 @@ import { User, useStore } from "../../utils/state";
 import { useContext, useEffect, useRef, useState } from "react";
 import renderLatex from "../../utils/latex";
 import { CompetitionIDContext } from "../competitions/[id]";
-import useSWR, { mutate } from "swr";
+import useSWR from "swr";
+import { useRouter } from "next/router";
 import LoadingButton from "../../components/loading-button";
 import Head from "next/head";
 import ErrorBox from "../../components/error-box";
@@ -38,6 +39,10 @@ export type Problem = {
 
     visible: boolean;
     difficulty?: string;
+
+    tags?: string[];
+    solved?: boolean;
+    bookmarked?: boolean;
 };
 
 type ProblemStatus = "Complete" | "InProgress" | "NotStarted";
@@ -90,7 +95,7 @@ function DifficultyBadge({ difficulty }: { difficulty: string }): JSX.Element {
     return <>{difficulty}</>;
 }
 
-function ProblemListing({ id, title, description, show_team_status, difficulty }: ProblemListingProps): JSX.Element {
+function ProblemListing({ id, title, description, show_team_status, difficulty, tags, solved, bookmarked }: ProblemListingProps): JSX.Element {
     let desc = marked.parse(description);
     const content = useRef<HTMLDivElement>(null);
 
@@ -104,13 +109,21 @@ function ProblemListing({ id, title, description, show_team_status, difficulty }
         <Link href={`/problems/${id}`}>
             <a className="sm:rounded-md border-neutral-300 dark:border-neutral-700 border-y sm:border sm:mx-2 md:m-0 bg-white dark:bg-black dark:hover:bg-neutral-800 p-4 hover:shadow-md max-h-52 hover:max-h-64 overflow-hidden transition-all">
                 <div className="flex items-center mb-4">
-                    <h1 className="text-2xl font-extrabold">{title}</h1>
+                    <h1 className="text-2xl font-extrabold">
+                        {bookmarked && <span title="Bookmarked" aria-label="Bookmarked">★ </span>}
+                        {title}
+                    </h1>
 
-                    <div className="flex ml-auto gap-4">
+                    <div className="flex ml-auto gap-4 items-center">
+                        {solved && <span className="text-green-600 dark:text-green-400 text-sm font-bold">Solved</span>}
                         {difficulty !== undefined && <DifficultyBadge difficulty={difficulty} />}
                         {show_team_status && <ProblemTeamStatus problem_id={id} />}
                     </div>
                 </div>
+
+                {tags && tags.length > 0 && <div className="flex flex-wrap gap-2 mb-4 text-sm">
+                    {tags.map((tag) => <span key={tag} className="rounded-full bg-neutral-100 dark:bg-neutral-800 px-3 py-1">{tag}</span>)}
+                </div>}
 
                 <div
                     ref={content}
@@ -136,7 +149,7 @@ function ListLoading(): JSX.Element {
 export function ProblemList({ problems, show_team_status, show_difficulty }: { problems: Problem[], show_team_status?: boolean, show_difficulty?: boolean }): JSX.Element {
     return (
         <>
-            {problems.map(({ id, title, description, difficulty, visible }) => (
+            {problems.map(({ id, title, description, difficulty, visible, tags, solved, bookmarked }) => (
                 <ProblemListing
                     key={id}
                     id={id}
@@ -147,42 +160,52 @@ export function ProblemList({ problems, show_team_status, show_difficulty }: { p
                     show_team_status={show_team_status}
                     difficulty={(show_difficulty ?? true) ? difficulty : undefined}
                     visible={visible}
+                    tags={tags}
+                    solved={solved}
+                    bookmarked={bookmarked}
                 />
             ))}
         </>
     );
 }
 
-function ProblemSearchResults({ query }: { query: string }) {
-    const { data: problems, error } = useSWR<Problem[]>(
-        "PROBLEMS_QUERY",
-        () => fetcher(api_url(`/problems?query=${encodeURIComponent(query)}&count=10`))
-    );
+type Filters = {
+    query: string;
+    difficulty: number;
+    tags: string[];
+    status: "" | "solved" | "unsolved";
+    bookmarked: boolean;
+    showCompetitionProblems: boolean;
+    sortBy: string;
+};
 
-    useEffect(() => {
-        mutate("PROBLEMS_QUERY");
-    }, [query]);
+export const noFilters: Filters = {
+    query: "",
+    difficulty: 0,
+    tags: [],
+    status: "",
+    bookmarked: false,
+    showCompetitionProblems: false,
+    sortBy: "Newest",
+};
 
-    if (error) return (
-        <ErrorBox>
-            Could not fetch problems
-        </ErrorBox>
-    );
-
-    if (problems) {
-        if (problems.length === 0) return <p>No problems found.</p>;
-        return <ProblemList problems={problems} />;
-    } else {
-        return <ListLoading />;
-    }
+export function filterParams({ query, difficulty, tags, status, bookmarked, showCompetitionProblems, sortBy }: Filters): string {
+    const params = new URLSearchParams({ difficulty: difficulty.toString(), sort_by: sortBy });
+    if (query.trim() !== "") params.set("query", query.trim());
+    if (tags.length > 0) params.set("tags", tags.join(","));
+    if (status !== "") params.set("status", status);
+    if (bookmarked) params.set("bookmarked", "true");
+    if (showCompetitionProblems) params.set("show_competition_problems", "true");
+    return params.toString();
 }
 
-function ProblemInfiniteResults({ difficulty, showCompetitionProblems, sortBy }: { difficulty: number, showCompetitionProblems: boolean, sortBy: string }) {
+export function ProblemResults({ filters }: { filters: Filters }) {
+    const params = filterParams(filters);
     const { data, error, isValidating, size, setSize } = useSWRInfinite<Problem[]>(
         (pageIndex, previousProblems) => {
             if (previousProblems && !previousProblems.length) return null;
 
-            return api_url(`/problems?offset=${7 * pageIndex}&count=7&difficulty=${difficulty}&show_competition_problems=${showCompetitionProblems}&sort_by=${sortBy}`);
+            return api_url(`/problems?offset=${7 * pageIndex}&count=7&${params}`);
         },
         fetcher
     );
@@ -206,13 +229,25 @@ function ProblemInfiniteResults({ difficulty, showCompetitionProblems, sortBy }:
     </>;
 }
 
+// Returns plain elements, so labels stay directly tied to their inputs.
+function choice(id: string, type: "checkbox" | "radio", checked: boolean, onChange: () => void, label: string, name?: string) {
+    return (
+        <div className="flex items-center gap-2">
+            <input id={id} type={type} name={name} checked={checked} onChange={onChange} />
+            <label htmlFor={id}>{label}</label>
+        </div>
+    );
+}
+
 const ProblemListPage: NextPage = () => {
-    const [difficulty, setDifficulty] = useState(0);
-    const [showCompetitionProblems, setShowCompetitionProblems] = useState(false);
-    const [sortBy, setSortBy] = useState("Newest");
-    const [query, setQuery] = useState("");
+    const [filters, setFilters] = useState<Filters>(noFilters);
     const [isComponentMounted, setIsComponentMounted] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
+    const [randomLoading, setRandomLoading] = useState(false);
+    const [randomMessage, setRandomMessage] = useState("");
+    const router = useRouter();
+    const set = (patch: Partial<Filters>) => setFilters((current) => ({ ...current, ...patch }));
+    const { difficulty, tags, status, bookmarked, showCompetitionProblems, sortBy, query } = filters;
 
     const { data: user } = useSWR<User>(
         api_url("/user/me"),
@@ -220,7 +255,35 @@ const ProblemListPage: NextPage = () => {
         shouldRetryOnError: false,
     });
 
+    const { data: allTags } = useSWR<{ name: string, count: number }[]>(api_url("/problems/tags"), fetcher);
+
     useEffect(() => setIsComponentMounted(true), []);
+
+    // A tag link from a problem page opens the list already filtered.
+    useEffect(() => {
+        if (!router.isReady || typeof router.query.tags !== "string") return;
+        setFilters((current) => ({ ...current, tags: (router.query.tags as string).split(",").filter(Boolean) }));
+        setShowFilters(true);
+    }, [router.isReady, router.query.tags]);
+
+    const loggedIn = isComponentMounted && !!user;
+    const activeFilters = filterParams(filters) !== filterParams(noFilters);
+
+    const openRandom = async () => {
+        setRandomLoading(true);
+        setRandomMessage("");
+        try {
+            // Keeps the difficulty and tag filters; skips problems already solved.
+            const params = filterParams({ ...filters, query: "", status: "unsolved", sortBy: "Random" });
+            const found: Problem[] = await fetcher(api_url(`/problems?count=1&${params}`));
+            if (found.length > 0) await router.push(`/problems/${found[0].id}`);
+            else setRandomMessage(loggedIn ? "No unsolved problems match these filters." : "No problems match these filters.");
+        } catch {
+            setRandomMessage("Could not pick a problem. Try again.");
+        } finally {
+            setRandomLoading(false);
+        }
+    };
 
     return (
         <>
@@ -232,12 +295,12 @@ const ProblemListPage: NextPage = () => {
 
             <div className="max-w-screen-md mx-auto my-4 flex flex-col gap-4">
                 <div className="grid grid-cols-5 gap-4 items-center justify-center">
-                    <button onClick={() => setShowFilters(!showFilters)} className="col-end-2 mr-auto bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 hover:bg-neutral-200 px-4 py-2 rounded-full transition-colors">
+                    <button onClick={() => setShowFilters(!showFilters)} className="col-end-2 mr-auto ml-4 md:ml-0 bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 hover:bg-neutral-200 px-4 py-2 rounded-full transition-colors">
                         Filters
                     </button>
 
                     <div className="col-start-2 col-end-5 focus-within:outline focus-within:outline-2 focus-within:border-neutral-200 focus-within:outline-neutral-200 border-neutral-100 dark:border-neutral-800 border rounded-full bg-white dark:bg-black dark:text-white overflow-hidden h-10 flex">
-                        <input aria-label="Search problems" className="outline-0 w-full ml-4 h-full dark:bg-black" value={query} onChange={e => setQuery(e.target.value)} />
+                        <input aria-label="Search problems" placeholder="Search by title" className="outline-0 w-full ml-4 h-full dark:bg-black" value={query} onChange={e => set({ query: e.target.value })} />
 
                         <div className="h-10 aspect-square inline-flex items-center justify-center">
                             <svg className="w-4 dark:fill-white dark:stroke-white" enableBackground="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32"><path d="M27.414,24.586l-5.077-5.077C23.386,17.928,24,16.035,24,14c0-5.514-4.486-10-10-10S4,8.486,4,14  s4.486,10,10,10c2.035,0,3.928-0.614,5.509-1.663l5.077,5.077c0.78,0.781,2.048,0.781,2.828,0  C28.195,26.633,28.195,25.367,27.414,24.586z M7,14c0-3.86,3.14-7,7-7s7,3.14,7,7s-3.14,7-7,7S7,17.86,7,14z" id="XMLID_223_" /></svg>
@@ -253,57 +316,79 @@ const ProblemListPage: NextPage = () => {
                     )}
                 </div>
 
-                {showFilters && <div className="bg-neutral-100 dark:bg-neutral-800 rounded-xl p-4 flex flex-col gap-4 sm:flex-row sm:gap-24">
-                    <div className="flex flex-col">
-                        <span className="font-bold mb-2">Difficulty</span>
+                <div className="flex flex-wrap items-center gap-2 mx-4 md:mx-0">
+                    <LoadingButton
+                        loading={randomLoading}
+                        onClick={openRandom}
+                        className="bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 hover:bg-neutral-200 px-4 py-2 rounded-full transition-colors"
+                    >
+                        {loggedIn ? "Random unsolved problem" : "Random problem"}
+                    </LoadingButton>
+                    {activeFilters && <button
+                        onClick={() => setFilters(noFilters)}
+                        className="bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 hover:bg-neutral-200 px-4 py-2 rounded-full transition-colors"
+                    >
+                        Clear all filters
+                    </button>}
+                    {randomMessage && <span role="status" className="text-sm">{randomMessage}</span>}
+                </div>
 
-                        <div className="flex items-center gap-2">
-                            <input id="easy" type="checkbox" checked={(difficulty & 1) !== 0} onChange={() => setDifficulty(difficulty ^ 1)} />
-                            <label htmlFor="easy">Easy</label>
+                {showFilters && <div className="bg-neutral-100 dark:bg-neutral-800 sm:rounded-xl p-4 flex flex-col gap-4">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:gap-16">
+                        <div className="flex flex-col">
+                            <span className="font-bold mb-2">Difficulty</span>
+                            {choice("easy", "checkbox", (difficulty & 1) !== 0, () => set({ difficulty: difficulty ^ 1 }), "Easy")}
+                            {choice("medium", "checkbox", (difficulty & 2) !== 0, () => set({ difficulty: difficulty ^ 2 }), "Medium")}
+                            {choice("hard", "checkbox", (difficulty & 4) !== 0, () => set({ difficulty: difficulty ^ 4 }), "Hard")}
                         </div>
 
-                        <div className="flex items-center gap-2">
-                            <input id="medium" type="checkbox" checked={(difficulty & 2) !== 0} onChange={() => setDifficulty(difficulty ^ 2)} />
-                            <label htmlFor="medium">Medium</label>
+                        {loggedIn && <div className="flex flex-col">
+                            <span className="font-bold mb-2">Status</span>
+                            {choice("status-all", "radio", status === "", () => set({ status: "" }), "All", "status")}
+                            {choice("status-solved", "radio", status === "solved", () => set({ status: "solved" }), "Solved", "status")}
+                            {choice("status-unsolved", "radio", status === "unsolved", () => set({ status: "unsolved" }), "Unsolved", "status")}
+                            {choice("bookmarked", "checkbox", bookmarked, () => set({ bookmarked: !bookmarked }), "Bookmarked")}
+                        </div>}
+
+                        <div className="flex flex-col">
+                            <span className="font-bold mb-2">Sort By</span>
+                            {choice("newest", "radio", sortBy == "Newest", () => set({ sortBy: "Newest" }), "Newest", "sort-by")}
+                            {choice("oldest", "radio", sortBy == "Oldest", () => set({ sortBy: "Oldest" }), "Oldest", "sort-by")}
+                            {choice("by-difficulty", "radio", sortBy == "Difficulty", () => set({ sortBy: "Difficulty" }), "Difficulty", "sort-by")}
+                            {choice("by-title", "radio", sortBy == "Title", () => set({ sortBy: "Title" }), "A to Z", "sort-by")}
                         </div>
 
-                        <div className="flex items-center gap-2">
-                            <input id="hard" type="checkbox" checked={(difficulty & 4) !== 0} onChange={() => setDifficulty(difficulty ^ 4)} />
-                            <label htmlFor="hard">Hard</label>
+                        <div className="flex flex-col">
+                            <span className="font-bold mb-2">Misc</span>
+                            {choice("competition-problems", "checkbox", showCompetitionProblems, () => set({ showCompetitionProblems: !showCompetitionProblems }), "Show competition problems")}
                         </div>
                     </div>
 
-                    <div>
-                        <span className="font-bold">Misc</span>
+                    {allTags && allTags.length > 0 && <div>
+                        <span className="font-bold">Tags</span>
+                        <span className="text-sm"> (problems must have every selected tag)</span>
 
-                        <div className="flex items-center gap-2">
-                            <input id="competition-problems" type="checkbox" checked={showCompetitionProblems} onChange={() => setShowCompetitionProblems(!showCompetitionProblems)} />
-                            <label htmlFor="competition-problems">Show competition problems</label>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                            {allTags.map(({ name, count }) => {
+                                const selected = tags.includes(name);
+                                return (
+                                    <button
+                                        key={name}
+                                        aria-pressed={selected}
+                                        onClick={() => set({ tags: selected ? tags.filter((tag) => tag !== name) : [...tags, name] })}
+                                        className={`rounded-full px-3 py-1 text-sm transition-colors ${selected
+                                            ? "bg-blue-600 text-blue-50 hover:bg-blue-500"
+                                            : "bg-white dark:bg-black hover:bg-neutral-200 dark:hover:bg-neutral-700"}`}
+                                    >
+                                        {name} <span className="opacity-60">{count}</span>
+                                    </button>
+                                );
+                            })}
                         </div>
-                    </div>
-
-                    <div>
-                        <span className="font-bold">Sort By</span>
-
-                        <div className="flex items-center gap-2">
-                            <input id="newest" type="radio" name="sort-by" checked={sortBy == "Newest"} onChange={() => setSortBy("Newest")} />
-                            <label htmlFor="newest">Newest</label>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <input id="oldest" type="radio" name="sort-by" checked={sortBy == "Oldest"} onChange={() => setSortBy("Oldest")} />
-                            <label htmlFor="oldest">Oldest</label>
-                        </div>
-                    </div>
+                    </div>}
                 </div>}
 
-                {query === ""
-                    ? <ProblemInfiniteResults
-                        showCompetitionProblems={showCompetitionProblems}
-                        difficulty={difficulty}
-                        sortBy={sortBy}
-                    />
-                    : <ProblemSearchResults query={query} />}
+                <ProblemResults filters={filters} />
             </div>
         </>
     );

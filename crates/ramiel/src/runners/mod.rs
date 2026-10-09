@@ -104,7 +104,7 @@ impl TestResults {
     }
 
     /// Records one result and its fuel. Returns false after a failed test:
-    /// a submission stops there, and later tests are not run or reported.
+    /// a submission stops there unless the job asked for every test.
     fn insert(&mut self, test: TestResult) -> bool {
         self.runtime += test.fuel;
         let passed = test.success;
