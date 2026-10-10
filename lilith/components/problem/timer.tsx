@@ -3,10 +3,11 @@ import { ProblemTimer, useStore } from "../../utils/state";
 
 const idle: ProblemTimer = { elapsed: 0, started: null };
 
-function format(milliseconds: number): string {
-    const minutes = Math.floor(milliseconds / 60000);
+// Seconds are shown so the timer visibly moves as soon as it starts.
+export function format(milliseconds: number): string {
+    const seconds = Math.floor(milliseconds / 1000);
     const pad = (value: number) => value.toString().padStart(2, "0");
-    return `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`;
+    return `${pad(Math.floor(seconds / 3600))}:${pad(Math.floor(seconds / 60) % 60)}:${pad(seconds % 60)}`;
 }
 
 /// An optional per-problem stopwatch. It only reads the clock, so it cannot delay a run or a submission.
@@ -35,7 +36,7 @@ export default function Timer({ id }: { id: number }): JSX.Element {
 
     return (
         <span className="inline-flex items-center gap-1" aria-label="Coding timer">
-            <span className="font-mono tabular-nums px-1" title="Hours and minutes spent on this problem">{format(elapsed)}</span>
+            <span className="font-mono tabular-nums px-1" title="Time spent on this problem (hours:minutes:seconds)">{format(elapsed)}</span>
             {running
                 ? <button className={button} onClick={() => setTimer(id, { elapsed, started: null })}>Pause</button>
                 : <button className={button} onClick={() => setTimer(id, { elapsed: timer.elapsed, started: Date.now() })}>
