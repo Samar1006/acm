@@ -31,6 +31,8 @@ for (const [file, fallback] of [['code-runner.tsx', 'Submission was rejected.'],
         setError: value => { error = value; },
         setResultError: value => { error = value; },
         setTestResult: value => { result = value; },
+        item: { key: 1 },
+        setOutcome: (key, outcome) => { error = outcome.error; result = outcome.result ?? null; },
       });
       assert.equal(error, message ?? fallback);
       if (file === 'input-tester.tsx') assert.equal(result, null);

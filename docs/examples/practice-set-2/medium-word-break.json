@@ -1,0 +1,410 @@
+{
+  "title": "Word Break",
+  "description": "Given a string `s` and a list of dictionary words `words`, decide whether `s` can be written as one or more dictionary words placed one after another with nothing left over.\n\nA dictionary word may be used as many times as you like. Return `true` if `s` can be built this way and `false` otherwise.\n\n### Constraints\n\n- `1 <= s.size() <= 300`\n- `1 <= words.size() <= 100`\n- `1 <= words[i].size() <= 20`\n- `s` and every word contain only lowercase English letters, and the words are all different.\n- Inputs are passed as function arguments and the answer is returned from the function. Do not read from standard input or print the result.\n",
+  "reference": "bool word_break(string s, vector<string> words) {\n    int n = s.size();\n    vector<bool> ok(n + 1, false);\n    ok[0] = true;\n    for (int end = 1; end <= n; ++end) {\n        for (const string& word : words) {\n            int length = word.size();\n            if (length <= end && ok[end - length] && s.compare(end - length, length, word) == 0) {\n                ok[end] = true;\n                break;\n            }\n        }\n    }\n    return ok[n];\n}\n",
+  "template": "bool word_break(string s, vector<string> words) {\n    // Return whether s can be split into dictionary words.\n    return false;\n}\n",
+  "tags": [
+    "Strings",
+    "Hash Tables",
+    "Dynamic Programming"
+  ],
+  "examples": [
+    {
+      "test_number": 0,
+      "explanation": "The string is apple + pen + apple. The word apple is used twice, which is allowed."
+    },
+    {
+      "test_number": 1,
+      "explanation": "cats + and leaves og, and cat + sand also leaves og. No dictionary word matches og, so the string cannot be built."
+    }
+  ],
+  "tests": [
+    {
+      "index": 0,
+      "input": {
+        "name": "word_break",
+        "arguments": [
+          {
+            "String": {
+              "Single": "applepenapple"
+            }
+          },
+          {
+            "String": {
+              "List": [
+                "apple",
+                "pen"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 1,
+      "input": {
+        "name": "word_break",
+        "arguments": [
+          {
+            "String": {
+              "Single": "catsandog"
+            }
+          },
+          {
+            "String": {
+              "List": [
+                "cats",
+                "dog",
+                "sand",
+                "and",
+                "cat"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 2,
+      "input": {
+        "name": "word_break",
+        "arguments": [
+          {
+            "String": {
+              "Single": "leetcode"
+            }
+          },
+          {
+            "String": {
+              "List": [
+                "leet",
+                "code"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 3,
+      "input": {
+        "name": "word_break",
+        "arguments": [
+          {
+            "String": {
+              "Single": "a"
+            }
+          },
+          {
+            "String": {
+              "List": [
+                "a"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 4,
+      "input": {
+        "name": "word_break",
+        "arguments": [
+          {
+            "String": {
+              "Single": "a"
+            }
+          },
+          {
+            "String": {
+              "List": [
+                "b"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 5,
+      "input": {
+        "name": "word_break",
+        "arguments": [
+          {
+            "String": {
+              "Single": "aaaaaaa"
+            }
+          },
+          {
+            "String": {
+              "List": [
+                "aaaa",
+                "aaa"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 6,
+      "input": {
+        "name": "word_break",
+        "arguments": [
+          {
+            "String": {
+              "Single": "aaaaaaa"
+            }
+          },
+          {
+            "String": {
+              "List": [
+                "aaaa",
+                "aa"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 7,
+      "input": {
+        "name": "word_break",
+        "arguments": [
+          {
+            "String": {
+              "Single": "cars"
+            }
+          },
+          {
+            "String": {
+              "List": [
+                "car",
+                "ca",
+                "rs"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 8,
+      "input": {
+        "name": "word_break",
+        "arguments": [
+          {
+            "String": {
+              "Single": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab"
+            }
+          },
+          {
+            "String": {
+              "List": [
+                "a",
+                "aa",
+                "aaa",
+                "aaaa",
+                "aaaaa"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 9,
+      "input": {
+        "name": "word_break",
+        "arguments": [
+          {
+            "String": {
+              "Single": "abababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababab"
+            }
+          },
+          {
+            "String": {
+              "List": [
+                "ab",
+                "abab",
+                "ba"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 10,
+      "input": {
+        "name": "word_break",
+        "arguments": [
+          {
+            "String": {
+              "Single": "goalspecial"
+            }
+          },
+          {
+            "String": {
+              "List": [
+                "go",
+                "goal",
+                "goals",
+                "special"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 11,
+      "input": {
+        "name": "word_break",
+        "arguments": [
+          {
+            "String": {
+              "Single": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxy"
+            }
+          },
+          {
+            "String": {
+              "List": [
+                "x",
+                "xx",
+                "xxx",
+                "xxxx",
+                "xxxxx",
+                "xxxxxx",
+                "xxxxxxx",
+                "xxxxxxxx",
+                "xxxxxxxxx",
+                "xxxxxxxxxx",
+                "xxxxxxxxxxx",
+                "xxxxxxxxxxxx",
+                "xxxxxxxxxxxxx",
+                "xxxxxxxxxxxxxx",
+                "xxxxxxxxxxxxxxx",
+                "xxxxxxxxxxxxxxxx",
+                "xxxxxxxxxxxxxxxxx",
+                "xxxxxxxxxxxxxxxxxx",
+                "xxxxxxxxxxxxxxxxxxx",
+                "xxxxxxxxxxxxxxxxxxxx",
+                "xy"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    }
+  ]
+}

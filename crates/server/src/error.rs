@@ -31,6 +31,9 @@ pub enum ServerError {
 
     #[error("You are not allowed to do that.")]
     PermissionDenied,
+
+    #[error("Run Tests and pass every example with this code before submitting.")]
+    TestsRequired,
 }
 
 impl IntoResponse for ServerError {
@@ -50,6 +53,11 @@ impl IntoResponse for ServerError {
             ServerError::PermissionDenied => (
                 StatusCode::FORBIDDEN,
                 Json(json!({"error": self.to_string()})),
+            )
+                .into_response(),
+            ServerError::TestsRequired => (
+                StatusCode::CONFLICT,
+                Json(json!({"error": self.to_string(), "type": "TestsRequired"})),
             )
                 .into_response(),
             ServerError::InternalError => (

@@ -3,6 +3,8 @@ import { useTransition, animated, useSpring } from "@react-spring/web";
 type LoadingButtonProps = {
   className?: string;
   loading?: boolean;
+  disabled?: boolean;
+  title?: string;
   type?: "button" | "submit";
   onClick?: () => void;
   children: React.ReactNode;
@@ -11,6 +13,8 @@ type LoadingButtonProps = {
 export default function LoadingButton({
   className,
   loading,
+  disabled,
+  title,
   type = "button",
   onClick,
   children,

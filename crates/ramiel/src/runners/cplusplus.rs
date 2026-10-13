@@ -104,7 +104,7 @@ impl Runner for CPlusPlus {
         // .await;
 
         // SAD SOLUTION FOR NOW
-        let mut tests = vec![];
+        let mut test_results = TestResults::new();
         for mut test in form.tests {
             test.adjust_runtime(form.runtime_multiplier);
             let (test, _) = run_test_timed(
@@ -117,19 +117,10 @@ impl Runner for CPlusPlus {
                 timeout_message,
             )
             .await?;
-            tests.push(test);
+            if !test_results.insert(test) && !form.run_all {
+                break;
+            }
         }
-
-        let mut total_runtime = 0;
-
-        let mut test_results = TestResults::new();
-
-        for test in tests {
-            total_runtime += test.fuel;
-            test_results.insert(test);
-        }
-
-        test_results.runtime = total_runtime;
 
         Ok(test_results.into())
     }

@@ -1,0 +1,343 @@
+{
+  "title": "Valid Sudoku",
+  "description": "A Sudoku board is given as a list of 9 strings, one per row from top to bottom. Each string has 9 characters: a digit `1` to `9`, or `.` for an empty cell.\n\nThe board is **valid** when no digit appears twice in any row, in any column, or in any of the nine 3 by 3 boxes. Empty cells are ignored, and the board does not need to be solvable.\n\nReturn `true` if the board is valid and `false` otherwise.\n\n### Constraints\n\n- `board.size() == 9` and every row has exactly 9 characters.\n- Every character is a digit `1` to `9` or `.`.\n- Inputs are passed as function arguments and the answer is returned from the function. Do not read from standard input or print the result.\n",
+  "reference": "bool is_valid_sudoku(vector<string> board) {\n    bool rows[9][9] = {}, cols[9][9] = {}, boxes[9][9] = {};\n    for (int r = 0; r < 9; ++r) {\n        for (int c = 0; c < 9; ++c) {\n            if (board[r][c] == '.') {\n                continue;\n            }\n            int d = board[r][c] - '1';\n            int b = (r / 3) * 3 + c / 3;\n            if (rows[r][d] || cols[c][d] || boxes[b][d]) {\n                return false;\n            }\n            rows[r][d] = cols[c][d] = boxes[b][d] = true;\n        }\n    }\n    return true;\n}\n",
+  "template": "bool is_valid_sudoku(vector<string> board) {\n    // Return whether no row, column, or box repeats a digit.\n    return false;\n}\n",
+  "tags": [
+    "Arrays",
+    "Hash Tables",
+    "Matrix"
+  ],
+  "examples": [
+    {
+      "test_number": 0,
+      "explanation": "No row, column, or 3 by 3 box contains the same digit twice, so the board is valid. It does not matter that many cells are still empty."
+    },
+    {
+      "test_number": 1,
+      "explanation": "The top-left cell is now 8, but the first column already has an 8 in the fourth row, and so does the top-left box. A repeated digit makes the board invalid."
+    }
+  ],
+  "tests": [
+    {
+      "index": 0,
+      "input": {
+        "name": "is_valid_sudoku",
+        "arguments": [
+          {
+            "String": {
+              "List": [
+                "53..7....",
+                "6..195...",
+                ".98....6.",
+                "8...6...3",
+                "4..8.3..1",
+                "7...2...6",
+                ".6....28.",
+                "...419..5",
+                "....8..79"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 1,
+      "input": {
+        "name": "is_valid_sudoku",
+        "arguments": [
+          {
+            "String": {
+              "List": [
+                "83..7....",
+                "6..195...",
+                ".98....6.",
+                "8...6...3",
+                "4..8.3..1",
+                "7...2...6",
+                ".6....28.",
+                "...419..5",
+                "....8..79"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 2,
+      "input": {
+        "name": "is_valid_sudoku",
+        "arguments": [
+          {
+            "String": {
+              "List": [
+                ".........",
+                ".........",
+                ".........",
+                ".........",
+                ".........",
+                ".........",
+                ".........",
+                ".........",
+                "........."
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 3,
+      "input": {
+        "name": "is_valid_sudoku",
+        "arguments": [
+          {
+            "String": {
+              "List": [
+                "53.57....",
+                "6..195...",
+                ".98....6.",
+                "8...6...3",
+                "4..8.3..1",
+                "7...2...6",
+                ".6....28.",
+                "...419..5",
+                "....8..79"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 4,
+      "input": {
+        "name": "is_valid_sudoku",
+        "arguments": [
+          {
+            "String": {
+              "List": [
+                "53..7....",
+                "6..195...",
+                ".98....6.",
+                "8...6...3",
+                "4..863..1",
+                "7...2...6",
+                ".6....28.",
+                "...419..5",
+                "....8..79"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 5,
+      "input": {
+        "name": "is_valid_sudoku",
+        "arguments": [
+          {
+            "String": {
+              "List": [
+                "53..7....",
+                "6..195...",
+                ".98....6.",
+                "8...6...3",
+                "4..8.3..1",
+                "7...2...6",
+                ".6....28.",
+                "...419..5",
+                "5...8..79"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 6,
+      "input": {
+        "name": "is_valid_sudoku",
+        "arguments": [
+          {
+            "String": {
+              "List": [
+                "743981652",
+                "891256374",
+                "526473189",
+                "237148596",
+                "418695723",
+                "965327841",
+                "384519267",
+                "672834915",
+                "159762438"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 7,
+      "input": {
+        "name": "is_valid_sudoku",
+        "arguments": [
+          {
+            "String": {
+              "List": [
+                "..1..6...",
+                "2..375...",
+                ".5...9642",
+                "6485271..",
+                ".1.68...5",
+                "5729314..",
+                "..5..8.67",
+                "7.....8.4",
+                "48..62..."
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 8,
+      "input": {
+        "name": "is_valid_sudoku",
+        "arguments": [
+          {
+            "String": {
+              "List": [
+                "415782639",
+                "693514278",
+                "28.396451",
+                "329165784",
+                "561847392",
+                "748923516",
+                "972631845",
+                "854279163",
+                "136458927"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 9,
+      "input": {
+        "name": "is_valid_sudoku",
+        "arguments": [
+          {
+            "String": {
+              "List": [
+                ".........",
+                ".........",
+                ".........",
+                ".........",
+                "....9....",
+                ".........",
+                ".........",
+                ".........",
+                "........."
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    }
+  ]
+}

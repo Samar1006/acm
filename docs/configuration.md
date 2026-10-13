@@ -26,7 +26,7 @@ Copy the example files for local development only. Do not put real secrets in th
 | `RAMIEL_PORT` | Local script only | `8082` | Ramiel port used by `scripts/dev-local.sh`. |
 | `FRONTEND_PORT` | Local script only | `3000` | Next.js dev-server port used by `scripts/dev-local.sh`. An explicit `FRONTEND_ORIGIN` must match `http://127.0.0.1:$FRONTEND_PORT`; update the Discord redirect too. |
 
-Ramiel itself accepts `PORT` (default `8082`), `HOSTNAME` (default `127.0.0.1`), and `WASMTIME_CACHE_CONFIG` (default `./wasmtime-cache.toml`). The local script passes Ramiel's bind address and port explicitly. Pass `--hostname` to either service rather than relying on `HOSTNAME` from the shell.
+Ramiel itself accepts `PORT` (default `8082`), `HOSTNAME` (default `127.0.0.1`), `WASMTIME_CACHE_CONFIG` (default `./wasmtime-cache.toml`), and `ACM_PYTHON_HOME` (default `/opt/acm-python`, the Python interpreter directory in the runner image). The local script passes Ramiel's bind address and port explicitly. Pass `--hostname` to either service rather than relying on `HOSTNAME` from the shell.
 
 The local-script secret defaults exist only for development. Set unique production `JWT_SECRET` and `DISCORD_SECRET` values; never use `dev-only-change-me` outside local development.
 

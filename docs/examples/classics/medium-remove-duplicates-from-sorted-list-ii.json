@@ -1,0 +1,304 @@
+{
+  "title": "Remove Duplicates from Sorted List II",
+  "description": "> This is the classic *linked list* exercise. Because this judge works with plain values, the list is given to you as a `vector<int>` of the node values in order, and you return the node values of the resulting list in order.\n\nGiven the values of a **sorted** linked list, delete **every** value that appears more than once, keeping only the values that occur exactly one time. Return the resulting list, still sorted.\n\n### Examples\n\n| `values` | Result |\n| --- | --- |\n| `[1, 2, 3, 3, 4, 4, 5]` | `[1, 2, 5]` |\n| `[1, 1, 1, 2, 3]` | `[2, 3]` |\n| `[1, 1]` | `[]` |\n\n### Constraints\n\n- `0 <= values.size() <= 300`\n- `-100 <= values[i] <= 100`\n- `values` is sorted in non-decreasing order.\n- Inputs are passed as function arguments and the answer is returned from the function. Do not read from standard input or print the result.\n",
+  "reference": "vector<int> remove_all_duplicates(vector<int> values) {\n    vector<int> result;\n    size_t i = 0;\n    while (i < values.size()) {\n        size_t j = i;\n        while (j < values.size() && values[j] == values[i]) {\n            ++j;\n        }\n        if (j - i == 1) {\n            result.push_back(values[i]);\n        }\n        i = j;\n    }\n    return result;\n}\n",
+  "template": "vector<int> remove_all_duplicates(vector<int> values) {\n    // Return only the values that appear exactly once, in order.\n    return {};\n}\n",
+  "tests": [
+    {
+      "index": 0,
+      "input": {
+        "name": "remove_all_duplicates",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                1,
+                2,
+                3,
+                3,
+                4,
+                4,
+                5
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "List"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "List": [
+            1,
+            2,
+            5
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 1,
+      "input": {
+        "name": "remove_all_duplicates",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                1,
+                1,
+                1,
+                2,
+                3
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "List"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "List": [
+            2,
+            3
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 2,
+      "input": {
+        "name": "remove_all_duplicates",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                1,
+                1
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "List"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "List": []
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 3,
+      "input": {
+        "name": "remove_all_duplicates",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                1,
+                2
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "List"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "List": [
+            1,
+            2
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 4,
+      "input": {
+        "name": "remove_all_duplicates",
+        "arguments": [
+          {
+            "Int": {
+              "List": []
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "List"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "List": []
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 5,
+      "input": {
+        "name": "remove_all_duplicates",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                -5,
+                -5,
+                -4,
+                -3,
+                -3,
+                -3,
+                0,
+                7
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "List"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "List": [
+            -4,
+            0,
+            7
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 6,
+      "input": {
+        "name": "remove_all_duplicates",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                2,
+                2,
+                2,
+                2
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "List"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "List": []
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 7,
+      "input": {
+        "name": "remove_all_duplicates",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                -20,
+                -20,
+                -19,
+                -19,
+                -18,
+                -18,
+                -17,
+                -14,
+                -13,
+                -13,
+                -13,
+                -12,
+                -12,
+                -12,
+                -12,
+                -11,
+                -11,
+                -11,
+                -11,
+                -10,
+                -10,
+                -10,
+                -7,
+                -7,
+                -5,
+                -4,
+                -3,
+                -3,
+                -2,
+                -1,
+                0,
+                0,
+                1,
+                1,
+                2,
+                2,
+                3,
+                3,
+                3,
+                4,
+                4,
+                4,
+                4,
+                5,
+                5,
+                6,
+                7,
+                8,
+                8,
+                12,
+                12,
+                14,
+                14,
+                15,
+                15,
+                15,
+                16,
+                16,
+                17,
+                18
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "List"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "List": [
+            -17,
+            -14,
+            -5,
+            -4,
+            -2,
+            -1,
+            6,
+            7,
+            17,
+            18
+          ]
+        }
+      },
+      "max_fuel": null
+    }
+  ]
+}

@@ -24,10 +24,12 @@ use wasmtime_wasi::{
 
 mod compiler;
 mod cplusplus;
+mod python;
 mod rust;
 
 pub use compiler::initialize as initialize_compiler_sandbox;
 pub use cplusplus::CPlusPlus;
+pub use python::Python;
 pub use rust::Rust;
 
 pub const EPOCH_PERIOD: Duration = Duration::from_millis(10);
@@ -101,12 +103,17 @@ impl TestResults {
         }
     }
 
-    fn insert(&mut self, test: TestResult) {
-        if test.success {
+    /// Records one result and its fuel. Returns false after a failed test:
+    /// a submission stops there unless the job asked for every test.
+    fn insert(&mut self, test: TestResult) -> bool {
+        self.runtime += test.fuel;
+        let passed = test.success;
+        if passed {
             self.passed_tests.insert(test);
         } else {
             self.failed_tests.insert(test);
         }
+        passed
     }
 }
 
@@ -148,7 +155,7 @@ async fn run_test_timed(
         .max_fuel
         .map(|x| x.saturating_mul(padding).clamp(0, MAX_FUEL));
 
-    match run_command(
+    let outcome = run_command(
         runtime,
         command,
         test.input.clone(),
@@ -157,8 +164,18 @@ async fn run_test_timed(
         deadline,
         timeout_message,
     )
-    .await
-    {
+    .await;
+    finish_test(test, max_runtime, outcome)
+}
+
+/// Turns one execution into a test result. Runtime errors fail the test;
+/// every other error aborts the job.
+fn finish_test(
+    test: Test,
+    max_runtime: Option<i64>,
+    outcome: Result<(FunctionValue, String, u64), RunnerError>,
+) -> Result<(TestResult, String), RunnerError> {
+    match outcome {
         Ok((result, output, fuel)) => {
             let mut test_result = test.make_result(result, fuel);
 
@@ -365,6 +382,9 @@ pub(crate) async fn run_command(
         let result = match language {
             Language::Cpp => input.call(&mut store, &instance),
             Language::Rust => input.call_rust(&mut store, &instance),
+            Language::Python => Err(anyhow::anyhow!(
+                "Python submissions run in the interpreter, not as compiled modules"
+            )),
         };
 
         drop(store);

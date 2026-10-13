@@ -1,0 +1,1088 @@
+{
+  "title": "Combination Sum II",
+  "description": "Given a list of positive integers `candidates`, which may contain repeated values, and a positive integer `target`, find every combination of candidates that adds up to `target`. Each **position** in `candidates` may be used **at most once**.\n\nReturn each combination with its values in ascending order, and list each distinct combination of values once. Return the combinations in ascending lexicographic order.\n\n### Constraints\n\n- `1 <= candidates.size() <= 16`\n- `1 <= candidates[i] <= 50`\n- `1 <= target <= 30`\n- Inputs are passed as function arguments and the answer is returned from the function. Do not read from standard input or print the result.\n",
+  "reference": "void pick(const vector<int>& candidates, size_t start, int remaining, vector<int>& chosen, vector<vector<int>>& out) {\n    if (remaining == 0) {\n        out.push_back(chosen);\n        return;\n    }\n    for (size_t i = start; i < candidates.size() && candidates[i] <= remaining; ++i) {\n        if (i > start && candidates[i] == candidates[i - 1]) {\n            continue;\n        }\n        chosen.push_back(candidates[i]);\n        pick(candidates, i + 1, remaining - candidates[i], chosen, out);\n        chosen.pop_back();\n    }\n}\n\nvector<vector<int>> combination_sum_once(vector<int> candidates, int target) {\n    sort(candidates.begin(), candidates.end());\n    vector<vector<int>> out;\n    vector<int> chosen;\n    pick(candidates, 0, target, chosen, out);\n    return out;\n}\n",
+  "template": "vector<vector<int>> combination_sum_once(vector<int> candidates, int target) {\n    // Return every distinct combination that sums to target, using each position once.\n    return {};\n}\n",
+  "tags": [
+    "Arrays",
+    "Backtracking",
+    "Sorting"
+  ],
+  "examples": [
+    {
+      "test_number": 0,
+      "explanation": "Four different combinations reach 8. The list has two 1s, so 1 + 1 + 6 is allowed, but 1 + 7 is listed once even though either 1 could be used."
+    },
+    {
+      "test_number": 1,
+      "explanation": "5 can be made as 1 + 2 + 2, using two of the three 2s, or as the single value 5."
+    }
+  ],
+  "tests": [
+    {
+      "index": 0,
+      "input": {
+        "name": "combination_sum_once",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                10,
+                1,
+                2,
+                7,
+                6,
+                1,
+                5
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 8
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Grid"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Grid": [
+            [
+              1,
+              1,
+              6
+            ],
+            [
+              1,
+              2,
+              5
+            ],
+            [
+              1,
+              7
+            ],
+            [
+              2,
+              6
+            ]
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 1,
+      "input": {
+        "name": "combination_sum_once",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                2,
+                5,
+                2,
+                1,
+                2
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 5
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Grid"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Grid": [
+            [
+              1,
+              2,
+              2
+            ],
+            [
+              5
+            ]
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 2,
+      "input": {
+        "name": "combination_sum_once",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                3,
+                3,
+                3
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 4
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Grid"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Grid": []
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 3,
+      "input": {
+        "name": "combination_sum_once",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                1,
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 2
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Grid"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Grid": [
+            [
+              1,
+              1
+            ]
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 4,
+      "input": {
+        "name": "combination_sum_once",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                50,
+                30
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 30
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Grid"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Grid": [
+            [
+              30
+            ]
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 5,
+      "input": {
+        "name": "combination_sum_once",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                4,
+                4,
+                2,
+                1,
+                4,
+                2,
+                2,
+                1,
+                5,
+                5
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 10
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Grid"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Grid": [
+            [
+              1,
+              1,
+              2,
+              2,
+              4
+            ],
+            [
+              1,
+              1,
+              4,
+              4
+            ],
+            [
+              1,
+              2,
+              2,
+              5
+            ],
+            [
+              1,
+              4,
+              5
+            ],
+            [
+              2,
+              2,
+              2,
+              4
+            ],
+            [
+              2,
+              4,
+              4
+            ],
+            [
+              5,
+              5
+            ]
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 6,
+      "input": {
+        "name": "combination_sum_once",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                2,
+                5,
+                9,
+                8,
+                5,
+                8,
+                5,
+                6,
+                8,
+                6,
+                3,
+                8
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 15
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Grid"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Grid": [
+            [
+              2,
+              3,
+              5,
+              5
+            ],
+            [
+              2,
+              5,
+              8
+            ],
+            [
+              3,
+              6,
+              6
+            ],
+            [
+              5,
+              5,
+              5
+            ],
+            [
+              6,
+              9
+            ]
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 7,
+      "input": {
+        "name": "combination_sum_once",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                6,
+                4,
+                4,
+                5,
+                2,
+                12,
+                2,
+                8,
+                1,
+                4,
+                10,
+                8,
+                11,
+                10,
+                7,
+                1
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 24
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Grid"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Grid": [
+            [
+              1,
+              1,
+              2,
+              2,
+              4,
+              4,
+              4,
+              6
+            ],
+            [
+              1,
+              1,
+              2,
+              2,
+              4,
+              4,
+              10
+            ],
+            [
+              1,
+              1,
+              2,
+              2,
+              4,
+              6,
+              8
+            ],
+            [
+              1,
+              1,
+              2,
+              2,
+              5,
+              6,
+              7
+            ],
+            [
+              1,
+              1,
+              2,
+              2,
+              6,
+              12
+            ],
+            [
+              1,
+              1,
+              2,
+              2,
+              7,
+              11
+            ],
+            [
+              1,
+              1,
+              2,
+              2,
+              8,
+              10
+            ],
+            [
+              1,
+              1,
+              2,
+              4,
+              4,
+              4,
+              8
+            ],
+            [
+              1,
+              1,
+              2,
+              4,
+              4,
+              5,
+              7
+            ],
+            [
+              1,
+              1,
+              2,
+              4,
+              4,
+              12
+            ],
+            [
+              1,
+              1,
+              2,
+              4,
+              5,
+              11
+            ],
+            [
+              1,
+              1,
+              2,
+              4,
+              6,
+              10
+            ],
+            [
+              1,
+              1,
+              2,
+              4,
+              8,
+              8
+            ],
+            [
+              1,
+              1,
+              2,
+              5,
+              7,
+              8
+            ],
+            [
+              1,
+              1,
+              2,
+              8,
+              12
+            ],
+            [
+              1,
+              1,
+              2,
+              10,
+              10
+            ],
+            [
+              1,
+              1,
+              4,
+              4,
+              4,
+              10
+            ],
+            [
+              1,
+              1,
+              4,
+              4,
+              6,
+              8
+            ],
+            [
+              1,
+              1,
+              4,
+              5,
+              6,
+              7
+            ],
+            [
+              1,
+              1,
+              4,
+              6,
+              12
+            ],
+            [
+              1,
+              1,
+              4,
+              7,
+              11
+            ],
+            [
+              1,
+              1,
+              4,
+              8,
+              10
+            ],
+            [
+              1,
+              1,
+              5,
+              6,
+              11
+            ],
+            [
+              1,
+              1,
+              5,
+              7,
+              10
+            ],
+            [
+              1,
+              1,
+              6,
+              8,
+              8
+            ],
+            [
+              1,
+              1,
+              10,
+              12
+            ],
+            [
+              1,
+              2,
+              2,
+              4,
+              4,
+              4,
+              7
+            ],
+            [
+              1,
+              2,
+              2,
+              4,
+              4,
+              5,
+              6
+            ],
+            [
+              1,
+              2,
+              2,
+              4,
+              4,
+              11
+            ],
+            [
+              1,
+              2,
+              2,
+              4,
+              5,
+              10
+            ],
+            [
+              1,
+              2,
+              2,
+              4,
+              7,
+              8
+            ],
+            [
+              1,
+              2,
+              2,
+              5,
+              6,
+              8
+            ],
+            [
+              1,
+              2,
+              2,
+              7,
+              12
+            ],
+            [
+              1,
+              2,
+              2,
+              8,
+              11
+            ],
+            [
+              1,
+              2,
+              4,
+              4,
+              5,
+              8
+            ],
+            [
+              1,
+              2,
+              4,
+              4,
+              6,
+              7
+            ],
+            [
+              1,
+              2,
+              4,
+              5,
+              12
+            ],
+            [
+              1,
+              2,
+              4,
+              6,
+              11
+            ],
+            [
+              1,
+              2,
+              4,
+              7,
+              10
+            ],
+            [
+              1,
+              2,
+              5,
+              6,
+              10
+            ],
+            [
+              1,
+              2,
+              5,
+              8,
+              8
+            ],
+            [
+              1,
+              2,
+              6,
+              7,
+              8
+            ],
+            [
+              1,
+              2,
+              10,
+              11
+            ],
+            [
+              1,
+              4,
+              4,
+              4,
+              5,
+              6
+            ],
+            [
+              1,
+              4,
+              4,
+              4,
+              11
+            ],
+            [
+              1,
+              4,
+              4,
+              5,
+              10
+            ],
+            [
+              1,
+              4,
+              4,
+              7,
+              8
+            ],
+            [
+              1,
+              4,
+              5,
+              6,
+              8
+            ],
+            [
+              1,
+              4,
+              7,
+              12
+            ],
+            [
+              1,
+              4,
+              8,
+              11
+            ],
+            [
+              1,
+              5,
+              6,
+              12
+            ],
+            [
+              1,
+              5,
+              7,
+              11
+            ],
+            [
+              1,
+              5,
+              8,
+              10
+            ],
+            [
+              1,
+              6,
+              7,
+              10
+            ],
+            [
+              1,
+              7,
+              8,
+              8
+            ],
+            [
+              1,
+              11,
+              12
+            ],
+            [
+              2,
+              2,
+              4,
+              4,
+              4,
+              8
+            ],
+            [
+              2,
+              2,
+              4,
+              4,
+              5,
+              7
+            ],
+            [
+              2,
+              2,
+              4,
+              4,
+              12
+            ],
+            [
+              2,
+              2,
+              4,
+              5,
+              11
+            ],
+            [
+              2,
+              2,
+              4,
+              6,
+              10
+            ],
+            [
+              2,
+              2,
+              4,
+              8,
+              8
+            ],
+            [
+              2,
+              2,
+              5,
+              7,
+              8
+            ],
+            [
+              2,
+              2,
+              8,
+              12
+            ],
+            [
+              2,
+              2,
+              10,
+              10
+            ],
+            [
+              2,
+              4,
+              4,
+              4,
+              10
+            ],
+            [
+              2,
+              4,
+              4,
+              6,
+              8
+            ],
+            [
+              2,
+              4,
+              5,
+              6,
+              7
+            ],
+            [
+              2,
+              4,
+              6,
+              12
+            ],
+            [
+              2,
+              4,
+              7,
+              11
+            ],
+            [
+              2,
+              4,
+              8,
+              10
+            ],
+            [
+              2,
+              5,
+              6,
+              11
+            ],
+            [
+              2,
+              5,
+              7,
+              10
+            ],
+            [
+              2,
+              6,
+              8,
+              8
+            ],
+            [
+              2,
+              10,
+              12
+            ],
+            [
+              4,
+              4,
+              4,
+              5,
+              7
+            ],
+            [
+              4,
+              4,
+              4,
+              12
+            ],
+            [
+              4,
+              4,
+              5,
+              11
+            ],
+            [
+              4,
+              4,
+              6,
+              10
+            ],
+            [
+              4,
+              4,
+              8,
+              8
+            ],
+            [
+              4,
+              5,
+              7,
+              8
+            ],
+            [
+              4,
+              8,
+              12
+            ],
+            [
+              4,
+              10,
+              10
+            ],
+            [
+              5,
+              7,
+              12
+            ],
+            [
+              5,
+              8,
+              11
+            ],
+            [
+              6,
+              7,
+              11
+            ],
+            [
+              6,
+              8,
+              10
+            ]
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 8,
+      "input": {
+        "name": "combination_sum_once",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                34,
+                19,
+                15,
+                43,
+                13,
+                40,
+                30,
+                25,
+                17,
+                15,
+                27,
+                7,
+                30,
+                10,
+                23,
+                1
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 30
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Grid"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Grid": [
+            [
+              1,
+              10,
+              19
+            ],
+            [
+              7,
+              10,
+              13
+            ],
+            [
+              7,
+              23
+            ],
+            [
+              13,
+              17
+            ],
+            [
+              15,
+              15
+            ],
+            [
+              30
+            ]
+          ]
+        }
+      },
+      "max_fuel": null
+    }
+  ]
+}

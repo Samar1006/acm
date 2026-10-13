@@ -15,6 +15,7 @@ pub struct HistoryItem {
     success: bool,
     runtime: i64,
     error: Option<String>,
+    verdict: Option<String>,
     time: NaiveDateTime,
 }
 
@@ -34,6 +35,7 @@ pub async fn history(
             success,
             runtime,
             error,
+            verdict,
             time
         FROM
             submissions

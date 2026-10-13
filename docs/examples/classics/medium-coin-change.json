@@ -1,0 +1,286 @@
+{
+  "title": "Coin Change",
+  "description": "You are given a list of coin denominations `coins` and a target `amount`. Every denomination is available in unlimited quantity.\n\nReturn the **fewest** number of coins whose values add up to exactly `amount`. If no combination of the given coins can reach `amount`, return `-1`.\n\n### Examples\n\n| `coins` | `amount` | Result | Why |\n| --- | --- | --- | --- |\n| `[1, 2, 5]` | `11` | `3` | 5 + 5 + 1 |\n| `[2]` | `3` | `-1` | Only even totals are reachable |\n| `[1]` | `0` | `0` | Nothing to make |\n| `[1, 5, 10, 25]` | `30` | `2` | 25 + 5 |\n\n### Constraints\n\n- `1 <= coins.size() <= 12`\n- `1 <= coins[i] <= 10000`\n- `0 <= amount <= 10000`\n- Inputs are passed as function arguments and the answer is returned from the function. Do not read from standard input or print the result.\n",
+  "reference": "int coin_change(vector<int> coins, int amount) {\n    const int INF = 1 << 30;\n    vector<int> best(amount + 1, INF);\n    best[0] = 0;\n    for (int a = 1; a <= amount; ++a) {\n        for (int c : coins) {\n            if (c <= a && best[a - c] + 1 < best[a]) {\n                best[a] = best[a - c] + 1;\n            }\n        }\n    }\n    return best[amount] == INF ? -1 : best[amount];\n}\n",
+  "template": "int coin_change(vector<int> coins, int amount) {\n    // Return the fewest coins that sum to amount, or -1 if impossible.\n    return 0;\n}\n",
+  "tests": [
+    {
+      "index": 0,
+      "input": {
+        "name": "coin_change",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                1,
+                2,
+                5
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 11
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 3
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 1,
+      "input": {
+        "name": "coin_change",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                2
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 3
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": -1
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 2,
+      "input": {
+        "name": "coin_change",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                1
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 0
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 0
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 3,
+      "input": {
+        "name": "coin_change",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                1,
+                5,
+                10,
+                25
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 30
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 2
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 4,
+      "input": {
+        "name": "coin_change",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                3,
+                7
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 5
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": -1
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 5,
+      "input": {
+        "name": "coin_change",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                186,
+                419,
+                83,
+                408
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 6249
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 20
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 6,
+      "input": {
+        "name": "coin_change",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                2,
+                5,
+                10,
+                1
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 27
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 4
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 7,
+      "input": {
+        "name": "coin_change",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                1,
+                2,
+                5
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 100
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 20
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 8,
+      "input": {
+        "name": "coin_change",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                9,
+                6,
+                5,
+                1
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 11
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 2
+        }
+      },
+      "max_fuel": null
+    }
+  ]
+}

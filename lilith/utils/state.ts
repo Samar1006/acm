@@ -26,7 +26,7 @@ export type AsymptoticComplexity =
     "LOG" |
     "CONSTANT";
 
-export type Language = "cpp" | "rust";
+export type Language = "cpp" | "rust" | "python";
 
 export type Submission = {
     language?: Language;
@@ -39,7 +39,29 @@ export type Submission = {
     runtime: number;
     time: string;
     complexity?: AsymptoticComplexity;
+    verdict?: Verdict | null;
 }
+
+export type Verdict = "Accepted" | "WrongAnswer" | "RuntimeError" | "TimeLimitExceeded" | "CompilationError" | "InternalError";
+
+/// The label shown for a submission. Rows from before verdicts existed fall back to their flags.
+export function verdictLabel({ verdict, success, error }: { verdict?: string | null, success: boolean, error?: string | null }): string {
+    switch (verdict) {
+        case "Accepted": return "Accepted";
+        case "WrongAnswer": return "Wrong Answer";
+        case "RuntimeError": return "Runtime Error";
+        case "TimeLimitExceeded": return "Time Limit Exceeded";
+        case "CompilationError": return "Compilation Error";
+        case "InternalError": return "Error";
+    }
+    return success ? "Accepted" : error ? "Error" : "Wrong Answer";
+}
+
+/// A coding timer for one problem. `started` is set while it is running.
+export type ProblemTimer = { elapsed: number, started: number | null };
+
+/// A user-written test: arguments in the problem's format and an optional expected result as text.
+export type CustomCase = { key: number, args: FunctionValue[], expected: string };
 
 
 export interface Store {
@@ -51,6 +73,7 @@ export interface Store {
 
     problemImpls: { [key: number]: string };
     rustImpls: { [key: number]: string };
+    pythonImpls: { [key: number]: string };
     problemLanguages: { [key: number]: Language };
     setProblemLanguage: (id: number, language: Language) => void;
 
@@ -59,10 +82,21 @@ export interface Store {
     setEditorFontSize: (fontSize: number) => void;
 
     setProblemImpl: (id: number, impl: string, language?: Language) => void;
+    resetProblemImpl: (id: number, language: Language) => void;
+
+    timers: { [key: number]: ProblemTimer };
+    timerHidden: boolean;
+    setTimer: (id: number, timer: ProblemTimer) => void;
+    setTimerHidden: (hidden: boolean) => void;
+
+    customCases: { [key: number]: CustomCase[] };
+    setCustomCases: (id: number, cases: CustomCase[]) => void;
 }
 
 export function getProblemImpl(state: Store, id: number, language = state.problemLanguages[id] ?? "cpp") {
-    return language === "rust" ? state.rustImpls[id] : state.problemImpls[id];
+    if (language === "rust") return state.rustImpls[id];
+    if (language === "python") return state.pythonImpls[id];
+    return state.problemImpls[id];
 }
 
 export const useStore = createWithEqualityFn<Store>()(
@@ -78,6 +112,7 @@ export const useStore = createWithEqualityFn<Store>()(
             editorFontSize: 18,
             problemImpls: {},
             rustImpls: {},
+            pythonImpls: {},
             problemLanguages: {},
             setProblemLanguage: (id, language) => {
                 useSession.getState().invalidateDiagnostics();
@@ -89,11 +124,31 @@ export const useStore = createWithEqualityFn<Store>()(
                 set(
                     produce((state: Store) => {
                         if (language === "rust") state.rustImpls[id] = impl;
+                        else if (language === "python") state.pythonImpls[id] = impl;
                         else state.problemImpls[id] = impl;
                         state.problemLanguages[id] = language;
                     })
                 );
             },
+
+            resetProblemImpl: (id, language) => {
+                useSession.getState().invalidateDiagnostics();
+                set(
+                    produce((state: Store) => {
+                        if (language === "rust") delete state.rustImpls[id];
+                        else if (language === "python") delete state.pythonImpls[id];
+                        else delete state.problemImpls[id];
+                    })
+                );
+            },
+
+            timers: {},
+            timerHidden: false,
+            setTimer: (id, timer) => set(produce((state: Store) => { state.timers[id] = timer; })),
+            setTimerHidden: (timerHidden) => set({ timerHidden }),
+
+            customCases: {},
+            setCustomCases: (id, cases) => set(produce((state: Store) => { state.customCases[id] = cases; })),
 
             setVimEnabled: (vimEnabled) =>
                 set(
@@ -137,6 +192,10 @@ export interface Session {
     beginCompilerCheck: (problem: number, language: Language, source: string) => CompilerRequest | null;
     finishCompilerCheck: (request: CompilerRequest | null, error?: unknown) => void;
 
+    // The code that last passed the problem's examples; Submit unlocks only for exactly this code.
+    examplesPassed: { problem: number, language: Language, source: string } | null;
+    setExamplesPassed: (passed: { problem: number, language: Language, source: string } | null) => void;
+
     setSubmissionShown: (shown: boolean) => void;
     setError: (error: string, shown: boolean) => void;
 }
@@ -151,6 +210,8 @@ export const useSession = createWithEqualityFn<Session>()((set, get) => ({
     diagnosticRequestId: 0,
     compilerRequest: null,
     compilerError: null,
+    examplesPassed: null,
+    setExamplesPassed: (examplesPassed) => set({ examplesPassed }),
     invalidateDiagnostics: (newGeneration = false) => set(state => ({
         diagnosticRevision: state.diagnosticRevision + 1,
         diagnosticGeneration: state.diagnosticGeneration + (newGeneration ? 1 : 0),

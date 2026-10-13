@@ -69,6 +69,8 @@ jobs:
             http://127.0.0.1:8082/healthz
       - name: Test real compilers, execution limits, and file isolation
         run: python3 scripts/test-rust-runner.py docker://acm-runner-test
+      - name: Test real Python execution, limits, and file isolation
+        run: python3 scripts/test-python-runner.py docker://acm-runner-test
       - name: Check fail-closed startup without the helper
         run: |
           set +e

@@ -1,0 +1,228 @@
+{
+  "title": "N-Queens II",
+  "description": "Place `n` queens on an `n \u00d7 n` chessboard so that no two queens attack each other: no two share a row, a column, or a diagonal.\n\nReturn the **number** of distinct solutions.\n\n### Examples\n\n| `n` | Result |\n| --- | --- |\n| `1` | `1` |\n| `4` | `2` |\n| `8` | `92` |\n\n### Constraints\n\n- `1 <= n <= 10`\n- Inputs are passed as function arguments and the answer is returned from the function. Do not read from standard input or print the result.\n",
+  "reference": "int count_queens(int row, int n, unsigned cols, unsigned d1, unsigned d2) {\n    if (row == n) {\n        return 1;\n    }\n    int total = 0;\n    unsigned free_squares = ~(cols | d1 | d2) & ((1u << n) - 1);\n    while (free_squares) {\n        unsigned bit = free_squares & -free_squares;\n        free_squares -= bit;\n        total += count_queens(row + 1, n, cols | bit, (d1 | bit) << 1, (d2 | bit) >> 1);\n    }\n    return total;\n}\n\nint total_n_queens(int n) {\n    return count_queens(0, n, 0, 0, 0);\n}\n",
+  "template": "int total_n_queens(int n) {\n    // Return how many distinct n-queens arrangements exist.\n    return 0;\n}\n",
+  "tests": [
+    {
+      "index": 0,
+      "input": {
+        "name": "total_n_queens",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 1
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 1
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 1,
+      "input": {
+        "name": "total_n_queens",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 2
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 0
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 2,
+      "input": {
+        "name": "total_n_queens",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 3
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 0
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 3,
+      "input": {
+        "name": "total_n_queens",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 4
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 2
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 4,
+      "input": {
+        "name": "total_n_queens",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 5
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 10
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 5,
+      "input": {
+        "name": "total_n_queens",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 6
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 4
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 6,
+      "input": {
+        "name": "total_n_queens",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 7
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 40
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 7,
+      "input": {
+        "name": "total_n_queens",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 8
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 92
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 8,
+      "input": {
+        "name": "total_n_queens",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 9
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 352
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 9,
+      "input": {
+        "name": "total_n_queens",
+        "arguments": [
+          {
+            "Int": {
+              "Single": 10
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 724
+        }
+      },
+      "max_fuel": null
+    }
+  ]
+}

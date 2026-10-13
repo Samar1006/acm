@@ -3,7 +3,10 @@ use axum::{extract::Path, Extension, Json};
 use serde::Deserialize;
 use sqlx::SqlitePool;
 
-use super::Difficulty;
+use super::{
+    extras::{replace_examples, replace_tags, ExampleForm},
+    Difficulty,
+};
 use crate::{auth::Claims, error::ServerError};
 
 #[derive(Deserialize)]
@@ -14,6 +17,11 @@ pub struct EditForm {
     runtime_multiplier: f64,
     difficulty: Difficulty,
     visible: bool,
+    /// Omitted fields are left unchanged.
+    tags: Option<Vec<String>>,
+    examples: Option<Vec<ExampleForm>>,
+    /// "default" (required unless in a competition), "on", or "off".
+    require_tests: Option<String>,
 }
 
 pub async fn edit(
@@ -51,6 +59,32 @@ pub async fn edit(
         log::error!("{e}");
         ServerError::InternalError
     })?;
+
+    let internal = |e: sqlx::Error| {
+        log::error!("{e}");
+        ServerError::InternalError
+    };
+    let mut tx = pool.begin().await.map_err(internal)?;
+    if let Some(tags) = &form.tags {
+        replace_tags(&mut tx, id, tags).await?;
+    }
+    if let Some(examples) = &form.examples {
+        replace_examples(&mut tx, id, examples).await?;
+    }
+    if let Some(require_tests) = &form.require_tests {
+        let value = match require_tests.as_str() {
+            "on" => Some(true),
+            "off" => Some(false),
+            _ => None,
+        };
+        sqlx::query("UPDATE problems SET require_tests = ? WHERE id = ?")
+            .bind(value)
+            .bind(id)
+            .execute(&mut *tx)
+            .await
+            .map_err(internal)?;
+    }
+    tx.commit().await.map_err(internal)?;
 
     Ok(())
 }

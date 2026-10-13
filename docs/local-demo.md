@@ -19,7 +19,7 @@ This is the complete local setup. It starts the frontend, API, and Ramiel withou
 
    For later starts without code changes, use `docker compose up`. Use `--build` after code changes. The frontend uses development mode. Source files are copied into the image, not mounted from your checkout.
 
-   The first build downloads images and dependencies and can use several GB of disk space. Sources include Docker Hub (`node`, `rust`, and `debian`), Debian package repositories, crates.io, and the package sources in the lockfiles. The runner also downloads toolchains from Rust distribution servers and the WebAssembly WASI SDK release on GitHub.
+   The first build downloads images and dependencies and can use several GB of disk space. Sources include Docker Hub (`node`, `rust`, `python`, and `debian`), Debian package repositories, crates.io, and the package sources in the lockfiles. The runner also downloads toolchains from Rust distribution servers, the WebAssembly WASI SDK release on GitHub, and the CPython WASI build release on GitHub.
 
 5. Open **<http://127.0.0.1:3000>**, not `localhost`. Check the API from another terminal:
 

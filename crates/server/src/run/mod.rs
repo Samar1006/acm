@@ -32,31 +32,73 @@ use crate::{
 };
 
 mod custom;
+mod examples;
+#[cfg(test)]
+mod examples_tests;
 mod generate_tests;
+#[cfg(test)]
+mod python_tests;
 #[cfg(test)]
 mod rust_tests;
 mod submit;
 
-pub(crate) async fn rust_signature(
+async fn stored_calls(
     pool: &SqlitePool,
     problem_id: i64,
-    custom: Option<&wasm_memory::WasmFunctionCall>,
-) -> Result<shared::models::language::RustSignature, ServerError> {
+) -> Result<Vec<wasm_memory::WasmFunctionCall>, ServerError> {
     let rows: Vec<(String,)> =
         sqlx::query_as("SELECT input FROM tests WHERE problem_id = ? ORDER BY test_number")
             .bind(problem_id)
             .fetch_all(pool)
             .await
             .map_err(|_| ServerError::InternalError)?;
-    let calls = rows
-        .into_iter()
+    rows.into_iter()
         .map(|(input,)| serde_json::from_str::<wasm_memory::WasmFunctionCall>(&input))
         .collect::<Result<Vec<_>, _>>()
-        .map_err(|_| ServerError::InternalError)?;
+        .map_err(|_| ServerError::InternalError)
+}
+
+pub(crate) async fn rust_signature(
+    pool: &SqlitePool,
+    problem_id: i64,
+    custom: Option<&wasm_memory::WasmFunctionCall>,
+) -> Result<shared::models::language::RustSignature, ServerError> {
+    let calls = stored_calls(pool, problem_id).await?;
     shared::models::language::RustSignature::from_calls(calls.iter())?;
     Ok(shared::models::language::RustSignature::from_calls(
         calls.iter().chain(custom),
     )?)
+}
+
+pub(crate) async fn python_signature(
+    pool: &SqlitePool,
+    problem_id: i64,
+    custom: Option<&wasm_memory::WasmFunctionCall>,
+) -> Result<shared::models::python::PythonSignature, ServerError> {
+    let calls = stored_calls(pool, problem_id).await?;
+    shared::models::python::PythonSignature::from_calls(calls.iter())?;
+    Ok(shared::models::python::PythonSignature::from_calls(
+        calls.iter().chain(custom),
+    )?)
+}
+
+/// Rust and Python generate code from the test signature, so every call of a
+/// problem must share one; C++ has no such requirement.
+pub(crate) fn check_signature<'a>(
+    language: shared::models::language::Language,
+    calls: impl IntoIterator<Item = &'a wasm_memory::WasmFunctionCall>,
+) -> Result<(), ServerError> {
+    use shared::models::language::Language;
+    match language {
+        Language::Cpp => {}
+        Language::Rust => {
+            shared::models::language::RustSignature::from_calls(calls)?;
+        }
+        Language::Python => {
+            shared::models::python::PythonSignature::from_calls(calls)?;
+        }
+    }
+    Ok(())
 }
 
 pub type JobQueueItem = Box<dyn Queueable>;
@@ -304,6 +346,7 @@ pub fn routes() -> Router {
         .route("/custom", post(custom::custom))
         .route("/generate-tests", post(generate_tests::generate_tests))
         .route("/submit", post(submit::submit))
+        .route("/tests", post(examples::examples))
         .route("/check/:id", get(check_job))
 }
 

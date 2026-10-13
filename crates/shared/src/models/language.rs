@@ -10,6 +10,7 @@ pub enum Language {
     #[default]
     Cpp,
     Rust,
+    Python,
 }
 
 impl Language {
@@ -17,6 +18,7 @@ impl Language {
         match self {
             Self::Cpp => "c++",
             Self::Rust => "rust",
+            Self::Python => "python",
         }
     }
 
@@ -25,9 +27,19 @@ impl Language {
             Self::Cpp => fuel,
             // Four times the C++ reference budget; containers copy guest memory.
             Self::Rust => fuel.map(|fuel| fuel.saturating_mul(4).clamp(100_000, 1 << 48)),
+            // The budget covers loading the submitted module as well as the call.
+            Self::Python => fuel.map(|fuel| {
+                fuel.saturating_mul(PYTHON_FUEL_FACTOR)
+                    .clamp(PYTHON_MIN_FUEL, 1 << 48)
+            }),
         }
     }
 }
+
+/// Interpreted loops use a few hundred times the fuel of compiled C++.
+const PYTHON_FUEL_FACTOR: i64 = 250;
+/// Room for importing standard library modules on the smallest tests.
+const PYTHON_MIN_FUEL: i64 = 500_000_000;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct RustSignature {
@@ -672,10 +684,21 @@ mod tests {
     #[test]
     fn language_defaults_and_fuel_are_bounded() {
         assert_eq!(Language::default(), Language::Cpp);
-        assert!(serde_json::from_str::<Language>("\"python\"").is_err());
+        assert_eq!(
+            serde_json::from_str::<Language>("\"python\"").unwrap(),
+            Language::Python
+        );
+        assert!(serde_json::from_str::<Language>("\"java\"").is_err());
         assert_eq!(Language::Cpp.fuel_limit(Some(6)), Some(6));
         assert_eq!(Language::Rust.fuel_limit(Some(6)), Some(100_000));
         assert_eq!(Language::Rust.fuel_limit(Some(i64::MAX)), Some(1 << 48));
         assert_eq!(Language::Rust.fuel_limit(None), None);
+        assert_eq!(Language::Python.fuel_limit(Some(6)), Some(PYTHON_MIN_FUEL));
+        assert_eq!(
+            Language::Python.fuel_limit(Some(10_000_000)),
+            Some(10_000_000 * PYTHON_FUEL_FACTOR)
+        );
+        assert_eq!(Language::Python.fuel_limit(Some(i64::MAX)), Some(1 << 48));
+        assert_eq!(Language::Python.fuel_limit(None), None);
     }
 }

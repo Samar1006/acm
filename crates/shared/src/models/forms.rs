@@ -13,6 +13,12 @@ pub struct SubmitJob {
     pub implementation: String,
     pub runtime_multiplier: Option<f64>,
     pub tests: Vec<Test>,
+    /// Run every test instead of stopping at the first failure.
+    #[serde(default)]
+    pub run_all: bool,
+    /// A shorter deadline than the runner's default, for quick example runs.
+    #[serde(default)]
+    pub deadline_seconds: Option<u64>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]

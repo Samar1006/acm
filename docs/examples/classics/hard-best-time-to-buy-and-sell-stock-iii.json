@@ -1,0 +1,655 @@
+{
+  "title": "Best Time to Buy and Sell Stock III",
+  "description": "`prices[i]` is the price of a share on day `i`.\n\nYou may complete **at most two** trades (a trade is one purchase followed later by one sale), and you can hold at most one share at a time: the first sale must happen before the second purchase. Return the largest total profit you can make.\n\n### Examples\n\n| `prices` | Result | Why |\n| --- | --- | --- |\n| `[3, 3, 5, 0, 0, 3, 1, 4]` | `6` | Buy 0 \u2192 sell 3, then buy 1 \u2192 sell 4 |\n| `[1, 2, 3, 4, 5]` | `4` | A single trade is best |\n| `[7, 6, 4, 3, 1]` | `0` | Never trade |\n\n### Constraints\n\n- `1 <= prices.size() <= 1000`\n- `0 <= prices[i] <= 10000`\n- Inputs are passed as function arguments and the answer is returned from the function. Do not read from standard input or print the result.\n",
+  "reference": "int max_profit_two(vector<int> prices) {\n    const int NEG = -(1 << 30);\n    int buy1 = NEG, sell1 = 0, buy2 = NEG, sell2 = 0;\n    for (int price : prices) {\n        buy1 = max(buy1, -price);\n        sell1 = max(sell1, buy1 + price);\n        buy2 = max(buy2, sell1 - price);\n        sell2 = max(sell2, buy2 + price);\n    }\n    return sell2;\n}\n",
+  "template": "int max_profit_two(vector<int> prices) {\n    // Return the best total profit using at most two non-overlapping trades.\n    return 0;\n}\n",
+  "tests": [
+    {
+      "index": 0,
+      "input": {
+        "name": "max_profit_two",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                7,
+                1,
+                5,
+                3,
+                6,
+                4
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 7
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 1,
+      "input": {
+        "name": "max_profit_two",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                7,
+                6,
+                4,
+                3,
+                1
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 0
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 2,
+      "input": {
+        "name": "max_profit_two",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                5
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 0
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 3,
+      "input": {
+        "name": "max_profit_two",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                2,
+                4,
+                1
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 2
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 4,
+      "input": {
+        "name": "max_profit_two",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                3,
+                3,
+                5,
+                0,
+                0,
+                3,
+                1,
+                4
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 6
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 5,
+      "input": {
+        "name": "max_profit_two",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                1,
+                2
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 1
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 6,
+      "input": {
+        "name": "max_profit_two",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                1,
+                2,
+                4,
+                2,
+                5,
+                7,
+                2,
+                4,
+                9,
+                0
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 13
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 7,
+      "input": {
+        "name": "max_profit_two",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                2,
+                1,
+                2,
+                0,
+                1
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 2
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 8,
+      "input": {
+        "name": "max_profit_two",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                244,
+                329,
+                369,
+                862,
+                542,
+                593,
+                733,
+                648,
+                402,
+                913,
+                816,
+                844,
+                128,
+                614,
+                154,
+                193,
+                779,
+                751,
+                80,
+                693,
+                140,
+                39,
+                914,
+                192,
+                474,
+                389,
+                219,
+                349,
+                197,
+                579,
+                906,
+                275,
+                261,
+                836,
+                401,
+                825,
+                935,
+                777,
+                209,
+                321,
+                27,
+                882,
+                237,
+                827,
+                563,
+                255,
+                767,
+                270,
+                492,
+                464,
+                190,
+                369,
+                398,
+                516,
+                713,
+                840,
+                748,
+                59,
+                461,
+                399,
+                607,
+                657,
+                500,
+                126,
+                111,
+                849,
+                694,
+                937,
+                506,
+                391,
+                181,
+                434,
+                714,
+                182,
+                648,
+                747,
+                539,
+                292,
+                56,
+                498,
+                455,
+                17,
+                982,
+                918,
+                735,
+                579,
+                247,
+                449,
+                965,
+                688,
+                595,
+                893,
+                539,
+                463,
+                137,
+                486,
+                752,
+                276,
+                596,
+                229,
+                254,
+                95,
+                197,
+                206,
+                215,
+                53,
+                583,
+                340,
+                778,
+                212,
+                449,
+                118,
+                380,
+                325,
+                581,
+                787,
+                669,
+                84,
+                152,
+                960,
+                459,
+                843,
+                668,
+                478,
+                500,
+                534,
+                382,
+                512,
+                272,
+                550,
+                673,
+                562,
+                150,
+                197,
+                689,
+                698,
+                909,
+                371,
+                456,
+                965,
+                49,
+                479,
+                784,
+                232,
+                234,
+                557,
+                57,
+                524,
+                778,
+                812,
+                385,
+                460,
+                136,
+                72,
+                240,
+                849,
+                188,
+                482,
+                820,
+                706,
+                566,
+                731,
+                317,
+                225,
+                192,
+                202,
+                529,
+                361,
+                976,
+                963,
+                873,
+                371,
+                612,
+                647,
+                559,
+                832,
+                574,
+                212,
+                553,
+                160,
+                709,
+                285,
+                166,
+                103,
+                896,
+                468,
+                486,
+                187,
+                774,
+                188,
+                989,
+                679,
+                184,
+                710,
+                698,
+                847,
+                617,
+                144,
+                547,
+                951,
+                332,
+                956,
+                833,
+                412,
+                258,
+                809,
+                37,
+                647,
+                615,
+                975,
+                228,
+                225,
+                17,
+                904,
+                633,
+                413,
+                46,
+                650,
+                222,
+                720,
+                787,
+                595,
+                568,
+                154,
+                892,
+                709,
+                492,
+                977,
+                155,
+                850,
+                556,
+                887,
+                910,
+                475,
+                111,
+                519,
+                521,
+                344,
+                321,
+                471,
+                291,
+                300,
+                558,
+                645,
+                406,
+                207,
+                374,
+                655,
+                819,
+                959,
+                249,
+                345,
+                7,
+                999,
+                745,
+                334,
+                920,
+                204,
+                823,
+                863,
+                960,
+                462,
+                769,
+                892,
+                923,
+                646,
+                119,
+                643,
+                788,
+                426,
+                603,
+                508,
+                146,
+                930,
+                545,
+                812,
+                340,
+                382,
+                586,
+                132,
+                884,
+                145,
+                363,
+                273,
+                607,
+                164,
+                798,
+                26,
+                387,
+                634,
+                618,
+                157,
+                119,
+                589,
+                164,
+                374,
+                260,
+                967,
+                451,
+                927,
+                222,
+                165,
+                89,
+                612,
+                758,
+                860,
+                489,
+                667,
+                107,
+                870,
+                679,
+                137,
+                164,
+                687,
+                351,
+                652,
+                260,
+                435,
+                3,
+                947,
+                520,
+                320,
+                146,
+                764,
+                901,
+                844,
+                775,
+                286,
+                948,
+                820,
+                411,
+                902,
+                849,
+                723,
+                903,
+                19,
+                695,
+                855,
+                194,
+                137,
+                153,
+                278,
+                984,
+                835,
+                306,
+                698,
+                454,
+                169,
+                899,
+                9,
+                454,
+                626,
+                186,
+                99,
+                599,
+                155,
+                113,
+                630,
+                20,
+                185,
+                56,
+                452,
+                417,
+                619,
+                656,
+                649,
+                255,
+                805,
+                792,
+                802,
+                643,
+                602,
+                323,
+                701,
+                525,
+                532,
+                759,
+                227,
+                955,
+                982,
+                251,
+                960,
+                961,
+                848,
+                836,
+                53,
+                719,
+                380,
+                704,
+                109,
+                509,
+                847,
+                51,
+                151,
+                555,
+                25,
+                743,
+                710,
+                362,
+                188
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 1973
+        }
+      },
+      "max_fuel": null
+    }
+  ]
+}

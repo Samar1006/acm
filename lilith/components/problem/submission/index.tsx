@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import renderLatex from "../../../utils/latex";
 import { Diagnostic, parseDiagnostics } from "../../../utils/editor-diagnostics";
-import { AsymptoticComplexity, Submission, useSession } from "../../../utils/state";
+import { AsymptoticComplexity, Submission, useSession, verdictLabel } from "../../../utils/state";
 
 export function ShareButton({
     className,
@@ -125,13 +125,13 @@ export function DiagnosticsDisplay({ error }: { error: string }) {
     }
 }
 
-function SubmissionFeedbackError({ id, error, inProblemView }: { id: number, error: string, inProblemView: boolean }) {
+function SubmissionFeedbackError({ id, error, inProblemView, title }: { id: number, error: string, inProblemView: boolean, title: string }) {
     const buttonClass = "bg-red-700 dark:bg-red-800 hover:bg-red-600 dark:hover:bg-red-900 text-red-50 rounded-full px-4 py-2 text-sm transition-colors";
 
     return (
         <div className="bg-red-500 dark:bg-red-700 text-red-50 flex flex-col h-full">
             <div className="flex items-start p-4">
-                <h1 className="text-2xl font-bold my-auto">Error</h1>
+                <h1 className="text-2xl font-bold my-auto">{title}</h1>
 
                 {inProblemView &&
                     <div className="ml-auto flex gap-2">
@@ -155,10 +155,12 @@ export default function SubmissionFeedback({
     error,
     success,
     runtime,
-    complexity
+    complexity,
+    verdict
 }: Submission & { inProblemView: boolean }): JSX.Element {
+    const label = verdictLabel({ verdict, success, error });
     if (error) {
-        return <SubmissionFeedbackError id={id} inProblemView={inProblemView} error={error} />
+        return <SubmissionFeedbackError id={id} inProblemView={inProblemView} error={error} title={label} />
     }
 
     let fuel = <div>
@@ -174,7 +176,7 @@ export default function SubmissionFeedback({
         return (
             <div className="flex-col flex p-4 bg-green-500 dark:bg-green-800 text-green-50 h-full gap-2">
                 <div className="flex items-start">
-                    <span className="font-bold text-2xl my-auto">Congratulations!</span>
+                    <span className="font-bold text-2xl my-auto">Accepted</span>
 
                     {inProblemView &&
                         <div className="ml-auto flex gap-2">
@@ -199,7 +201,7 @@ export default function SubmissionFeedback({
         return (
             <div className="flex-col flex p-4 bg-white dark:bg-black h-full" >
                 <div className="flex items-start">
-                    <span className="text-red-500 font-bold text-2xl my-auto">Failed</span>
+                    <span className="text-red-500 font-bold text-2xl my-auto">{label}</span>
                     {inProblemView &&
                         <div className="ml-auto flex gap-2">
                             <ShareButton
@@ -212,7 +214,13 @@ export default function SubmissionFeedback({
                     }
                 </div>
 
-                <span>The code did not pass all of the tests.</span>
+                <span>
+                    {verdict === "TimeLimitExceeded"
+                        ? "The code used more fuel than a test allows. Look for a faster approach."
+                        : verdict === "RuntimeError"
+                            ? "The code stopped with an error on a test. Open the failed test below for the message."
+                            : "The code returned a different answer on a test. Open the failed test below to compare."}
+                </span>
                 {fuel}
 
             </div>

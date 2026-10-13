@@ -1,0 +1,317 @@
+{
+  "title": "Sudoku Solver",
+  "description": "A Sudoku board is given as a list of 9 strings, one per row from top to bottom. Each string has 9 characters: a digit `1` to `9`, or `.` for an empty cell.\n\nFill in every empty cell so that each row, each column, and each of the nine 3 by 3 boxes contains the digits `1` to `9` exactly once. Return the completed board in the same format.\n\nEvery test has exactly one solution.\n\n### Constraints\n\n- `board.size() == 9` and every row has exactly 9 characters.\n- Every character is a digit `1` to `9` or `.`.\n- Inputs are passed as function arguments and the answer is returned from the function. Do not read from standard input or print the result.\n",
+  "reference": "bool fill(vector<string>& board, bool rows[9][9], bool cols[9][9], bool boxes[9][9]) {\n    int best_r = -1, best_c = -1, best_count = 10;\n    for (int r = 0; r < 9; ++r) {\n        for (int c = 0; c < 9; ++c) {\n            if (board[r][c] != '.') {\n                continue;\n            }\n            int count = 0;\n            for (int d = 0; d < 9; ++d) {\n                if (!rows[r][d] && !cols[c][d] && !boxes[(r / 3) * 3 + c / 3][d]) {\n                    ++count;\n                }\n            }\n            if (count < best_count) {\n                best_count = count;\n                best_r = r;\n                best_c = c;\n            }\n        }\n    }\n    if (best_r < 0) {\n        return true;\n    }\n    int b = (best_r / 3) * 3 + best_c / 3;\n    for (int d = 0; d < 9; ++d) {\n        if (rows[best_r][d] || cols[best_c][d] || boxes[b][d]) {\n            continue;\n        }\n        rows[best_r][d] = cols[best_c][d] = boxes[b][d] = true;\n        board[best_r][best_c] = (char)('1' + d);\n        if (fill(board, rows, cols, boxes)) {\n            return true;\n        }\n        rows[best_r][d] = cols[best_c][d] = boxes[b][d] = false;\n        board[best_r][best_c] = '.';\n    }\n    return false;\n}\n\nvector<string> solve_sudoku(vector<string> board) {\n    bool rows[9][9] = {}, cols[9][9] = {}, boxes[9][9] = {};\n    for (int r = 0; r < 9; ++r) {\n        for (int c = 0; c < 9; ++c) {\n            if (board[r][c] != '.') {\n                int d = board[r][c] - '1';\n                rows[r][d] = cols[c][d] = boxes[(r / 3) * 3 + c / 3][d] = true;\n            }\n        }\n    }\n    fill(board, rows, cols, boxes);\n    return board;\n}\n",
+  "template": "vector<string> solve_sudoku(vector<string> board) {\n    // Return the completed board.\n    return {};\n}\n",
+  "tags": [
+    "Backtracking",
+    "Matrix",
+    "Hash Tables"
+  ],
+  "examples": [
+    {
+      "test_number": 0,
+      "explanation": "Each empty cell is filled so that every row, column, and 3 by 3 box has the digits 1 to 9 once. For example, the first row becomes 534678912: the given 5, 3, and 7 stay in place."
+    },
+    {
+      "test_number": 1,
+      "explanation": "Only a few cells are empty here. Each one is the single digit missing from its row, column, and box."
+    }
+  ],
+  "tests": [
+    {
+      "index": 0,
+      "input": {
+        "name": "solve_sudoku",
+        "arguments": [
+          {
+            "String": {
+              "List": [
+                "53..7....",
+                "6..195...",
+                ".98....6.",
+                "8...6...3",
+                "4..8.3..1",
+                "7...2...6",
+                ".6....28.",
+                "...419..5",
+                "....8..79"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "String": "List"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "List": [
+            "534678912",
+            "672195348",
+            "198342567",
+            "859761423",
+            "426853791",
+            "713924856",
+            "961537284",
+            "287419635",
+            "345286179"
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 1,
+      "input": {
+        "name": "solve_sudoku",
+        "arguments": [
+          {
+            "String": {
+              "List": [
+                ".586..473",
+                "296374158",
+                ".738.12.6",
+                "..754.819",
+                ".45.18627",
+                "81.7.6.4.",
+                "98.46.531",
+                "7641.598.",
+                ".312897.4"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "String": "List"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "List": [
+            "158692473",
+            "296374158",
+            "473851296",
+            "627543819",
+            "345918627",
+            "819726345",
+            "982467531",
+            "764135982",
+            "531289764"
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 2,
+      "input": {
+        "name": "solve_sudoku",
+        "arguments": [
+          {
+            "String": {
+              "List": [
+                "....82695",
+                "695...8.7",
+                "827..931.",
+                ".4.3....8",
+                "273...1..",
+                "9..614.73",
+                "..29..731",
+                ".6..735.2",
+                "73..5.469"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "String": "List"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "List": [
+            "314782695",
+            "695431827",
+            "827569314",
+            "146327958",
+            "273895146",
+            "958614273",
+            "582946731",
+            "469173582",
+            "731258469"
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 3,
+      "input": {
+        "name": "solve_sudoku",
+        "arguments": [
+          {
+            "String": {
+              "List": [
+                ".348.2...",
+                ".8.......",
+                "..5.416.2",
+                "..751.2..",
+                "8..6..1..",
+                "351.2876.",
+                ".1.2.6.7.",
+                "5.3...92.",
+                "....35.14"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "String": "List"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "List": [
+            "134862597",
+            "286957431",
+            "795341682",
+            "967513248",
+            "842679153",
+            "351428769",
+            "418296375",
+            "573184926",
+            "629735814"
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 4,
+      "input": {
+        "name": "solve_sudoku",
+        "arguments": [
+          {
+            "String": {
+              "List": [
+                ".4.91...5",
+                "...78....",
+                "5..4..1.2",
+                "46....3..",
+                "7836..5..",
+                "........4",
+                "..7.48...",
+                "..95.14..",
+                "..429.751"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "String": "List"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "List": [
+            "346912875",
+            "291785643",
+            "578463192",
+            "462159387",
+            "783624519",
+            "915837264",
+            "157348926",
+            "629571438",
+            "834296751"
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 5,
+      "input": {
+        "name": "solve_sudoku",
+        "arguments": [
+          {
+            "String": {
+              "List": [
+                ".4.......",
+                "..76.3..9",
+                "6..2....7",
+                ".2..3.9.4",
+                "...7.28.3",
+                ".13.....5",
+                "..6.2.37.",
+                "3.1.685..",
+                ".....7..6"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "String": "List"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "List": [
+            "249175638",
+            "157683249",
+            "638294157",
+            "725831964",
+            "964752813",
+            "813946725",
+            "486529371",
+            "371468592",
+            "592317486"
+          ]
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 6,
+      "input": {
+        "name": "solve_sudoku",
+        "arguments": [
+          {
+            "String": {
+              "List": [
+                "...6...5.",
+                "15...8..9",
+                ".7..1.4..",
+                "....732..",
+                ".........",
+                "54.9...37",
+                "...53...4",
+                "4..7.1...",
+                "325.4...6"
+              ]
+            }
+          }
+        ],
+        "return_type": {
+          "String": "List"
+        }
+      },
+      "expected_output": {
+        "String": {
+          "List": [
+            "284697351",
+            "153428679",
+            "976315482",
+            "869173245",
+            "731254968",
+            "542986137",
+            "617532894",
+            "498761523",
+            "325849716"
+          ]
+        }
+      },
+      "max_fuel": null
+    }
+  ]
+}

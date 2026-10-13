@@ -131,3 +131,76 @@ test('both request paths send language and reject HTTP errors before job polling
     assert.match(readFileSync(path.join(root, file), 'utf8'), /language \?\? "cpp"/);
   }
 });
+
+test('Python drafts are stored apart from C++ and Rust and survive reload', async () => {
+  const data = new Map();
+  const storage = { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) };
+  let store = loadStore(storage);
+  store.useStore.getState().setProblemImpl(1, 'C++ draft', 'cpp');
+  store.useStore.getState().setProblemImpl(1, 'Rust draft', 'rust');
+  store.useStore.getState().setProblemLanguage(1, 'python');
+  assert.equal(store.getProblemImpl(store.useStore.getState(), 1), undefined);
+  store.useStore.getState().setProblemImpl(1, 'def add(): pass', 'python');
+  store = loadStore(storage);
+  assert.equal(store.useStore.getState().problemLanguages[1], 'python');
+  assert.equal(store.getProblemImpl(store.useStore.getState(), 1), 'def add(): pass');
+  assert.equal(store.getProblemImpl(store.useStore.getState(), 1, 'cpp'), 'C++ draft');
+  assert.equal(store.getProblemImpl(store.useStore.getState(), 1, 'rust'), 'Rust draft');
+  const render = loadHistoryButton(store, async () => ({ ok: true, json: async () => ({ code: 'def old(): pass', language: 'python' }) }));
+  await render().props.onClick();
+  assert.equal(store.getProblemImpl(store.useStore.getState(), 1, 'python'), 'def old(): pass');
+  assert.equal(store.getProblemImpl(store.useStore.getState(), 1, 'rust'), 'Rust draft');
+});
+
+test('drafts saved before Python support still load', () => {
+  const data = new Map([['data', JSON.stringify({ state: { problemImpls: { 1: 'old C++' }, rustImpls: { 1: 'old Rust' }, problemLanguages: { 1: 'rust' } }, version: 0 })]]);
+  const storage = { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) };
+  const { useStore, getProblemImpl } = loadStore(storage);
+  assert.equal(getProblemImpl(useStore.getState(), 1), 'old Rust');
+  assert.equal(getProblemImpl(useStore.getState(), 1, 'python'), undefined);
+  useStore.getState().setProblemImpl(1, 'def add(): pass', 'python');
+  assert.equal(getProblemImpl(useStore.getState(), 1), 'def add(): pass');
+  assert.equal(getProblemImpl(useStore.getState(), 1, 'cpp'), 'old C++');
+});
+
+test('timer shows seconds, keeps counting across a reload, and pauses, resumes, and resets', () => {
+  const data = new Map();
+  const storage = { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) };
+  let store = loadStore(storage);
+  let now = 1_000_000;
+  const render = () => {
+    const state = [];
+    let cursor = 0;
+    const context = { exports: {}, Date: { now: () => now }, Math, setInterval: () => 1, clearInterval() {},
+      require(name) {
+        if (name === 'react') return { useEffect() {}, useState: initial => { const i = cursor++; if (!(i in state)) state[i] = typeof initial === 'function' ? initial() : initial; return [state[i], () => {}]; } };
+        if (name === 'react/jsx-runtime') return { jsx: (type, props) => ({ type, props }), jsxs: (type, props) => ({ type, props }) };
+        if (name.endsWith('/utils/state')) return { useStore: select => select(store.useStore.getState()) };
+        return name;
+      } };
+    vm.runInNewContext(ts.transpileModule(readFileSync(path.join(root, 'components/problem/timer.tsx'), 'utf8'), { compilerOptions: {
+      jsx: ts.JsxEmit.ReactJSX, module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, esModuleInterop: true } }).outputText, context);
+    const tree = context.exports.default({ id: 5 });
+    const children = [].concat(tree.props.children).flat();
+    const button = label => children.find(node => node?.type === 'button' && [].concat(node.props.children).join('') === label);
+    return { text: children[0]?.props?.children, button, format: context.exports.format };
+  };
+  assert.equal(render().text, '00:00:00');
+  assert.equal(render().format(3_723_000), '01:02:03');
+  render().button('Start').props.onClick();
+  now += 5_000;
+  assert.equal(render().text, '00:00:05');
+  store = loadStore(storage); // reload: a running timer keeps running
+  now += 60_000;
+  assert.equal(render().text, '00:01:05');
+  render().button('Pause').props.onClick();
+  now += 600_000;
+  assert.equal(render().text, '00:01:05');
+  render().button('Resume').props.onClick();
+  now += 2_000;
+  assert.equal(render().text, '00:01:07');
+  render().button('Reset').props.onClick();
+  assert.equal(render().text, '00:00:00');
+  render().button('Hide').props.onClick();
+  assert.equal(store.useStore.getState().timerHidden, true);
+});

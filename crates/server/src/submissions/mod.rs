@@ -23,6 +23,11 @@ pub struct Submission {
     pub complexity: Option<AsymptoticComplexity>,
     pub time: NaiveDateTime,
     pub code: String,
+    /// Accepted, WrongAnswer, RuntimeError, TimeLimitExceeded,
+    /// CompilationError, or InternalError.
+    #[sqlx(default)]
+    #[serde(default)]
+    pub verdict: Option<String>,
 }
 
 pub fn routes() -> Router {

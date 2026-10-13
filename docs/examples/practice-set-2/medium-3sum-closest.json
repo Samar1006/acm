@@ -1,0 +1,470 @@
+{
+  "title": "3Sum Closest",
+  "description": "Given a list of integers `nums` and an integer `target`, choose three values from three different positions so that their sum is as close to `target` as possible.\n\nReturn that **sum**. Every test has exactly one closest sum.\n\n### Constraints\n\n- `3 <= nums.size() <= 200`\n- `-1000 <= nums[i] <= 1000`\n- `-10000 <= target <= 10000`\n- Inputs are passed as function arguments and the answer is returned from the function. Do not read from standard input or print the result.\n",
+  "reference": "int three_sum_closest(vector<int> nums, int target) {\n    sort(nums.begin(), nums.end());\n    int n = nums.size();\n    int best = nums[0] + nums[1] + nums[2];\n    for (int i = 0; i + 2 < n; ++i) {\n        int left = i + 1, right = n - 1;\n        while (left < right) {\n            int sum = nums[i] + nums[left] + nums[right];\n            if (abs(sum - target) < abs(best - target)) {\n                best = sum;\n            }\n            if (sum < target) {\n                ++left;\n            } else if (sum > target) {\n                --right;\n            } else {\n                return sum;\n            }\n        }\n    }\n    return best;\n}\n",
+  "template": "int three_sum_closest(vector<int> nums, int target) {\n    // Return the sum of three values that is closest to target.\n    return 0;\n}\n",
+  "tags": [
+    "Arrays",
+    "Two Pointers",
+    "Sorting"
+  ],
+  "examples": [
+    {
+      "test_number": 0,
+      "explanation": "The sum -1 + 2 + 1 = 2 is only 1 away from the target 1. Every other choice of three values is further away."
+    },
+    {
+      "test_number": 1,
+      "explanation": "Every choice of three values sums to 3, so 3 is the closest possible sum to 10."
+    }
+  ],
+  "tests": [
+    {
+      "index": 0,
+      "input": {
+        "name": "three_sum_closest",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                -1,
+                2,
+                1,
+                -4
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 1
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 2
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 1,
+      "input": {
+        "name": "three_sum_closest",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                1,
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 10
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 3
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 2,
+      "input": {
+        "name": "three_sum_closest",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 1
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 0
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 3,
+      "input": {
+        "name": "three_sum_closest",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                1,
+                2,
+                4,
+                8,
+                16
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 23
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 22
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 4,
+      "input": {
+        "name": "three_sum_closest",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                -5,
+                -3,
+                -1
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 100
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": -9
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 5,
+      "input": {
+        "name": "three_sum_closest",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                1000,
+                1000,
+                1000,
+                -1000
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": -10000
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 1000
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 6,
+      "input": {
+        "name": "three_sum_closest",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                5,
+                8,
+                12,
+                5,
+                8,
+                -15,
+                -12,
+                -1,
+                -15,
+                -9,
+                8,
+                15
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 11
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 11
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 7,
+      "input": {
+        "name": "three_sum_closest",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                101,
+                -183,
+                -79,
+                -45,
+                153,
+                172,
+                142,
+                96,
+                -73,
+                -118,
+                -168,
+                164,
+                -85,
+                159,
+                179,
+                -12,
+                23,
+                -137,
+                143,
+                -12,
+                -145,
+                188,
+                -146,
+                175,
+                -3,
+                -93,
+                -54,
+                -22,
+                99,
+                13,
+                -27,
+                95,
+                176,
+                5,
+                -79,
+                197,
+                54,
+                21,
+                67,
+                -155
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": 28
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": 28
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 8,
+      "input": {
+        "name": "three_sum_closest",
+        "arguments": [
+          {
+            "Int": {
+              "List": [
+                -785,
+                708,
+                339,
+                -670,
+                -50,
+                58,
+                -646,
+                -16,
+                648,
+                50,
+                -567,
+                276,
+                254,
+                -201,
+                -482,
+                -549,
+                961,
+                -411,
+                834,
+                -624,
+                472,
+                814,
+                882,
+                -40,
+                180,
+                383,
+                622,
+                -836,
+                864,
+                822,
+                742,
+                705,
+                138,
+                -283,
+                -451,
+                -919,
+                -468,
+                650,
+                230,
+                952,
+                347,
+                -896,
+                406,
+                -688,
+                -597,
+                -266,
+                -344,
+                520,
+                -79,
+                144,
+                538,
+                846,
+                -903,
+                802,
+                781,
+                234,
+                461,
+                216,
+                996,
+                -43,
+                637,
+                -472,
+                -654,
+                2,
+                -736,
+                -403,
+                -46,
+                125,
+                -576,
+                322,
+                -912,
+                237,
+                306,
+                -882,
+                -791,
+                -954,
+                -43,
+                104,
+                282,
+                367,
+                -379,
+                -806,
+                697,
+                641,
+                676,
+                -851,
+                -330,
+                -775,
+                408,
+                580,
+                984,
+                -390,
+                324,
+                148,
+                -339,
+                817,
+                668,
+                -827,
+                -822,
+                -869,
+                -535,
+                608,
+                -329,
+                -29,
+                922,
+                778,
+                784,
+                431,
+                325,
+                -846,
+                -952,
+                576,
+                156,
+                946,
+                593,
+                246,
+                584,
+                -861,
+                -838,
+                206
+              ]
+            }
+          },
+          {
+            "Int": {
+              "Single": -660
+            }
+          }
+        ],
+        "return_type": {
+          "Int": "Single"
+        }
+      },
+      "expected_output": {
+        "Int": {
+          "Single": -660
+        }
+      },
+      "max_fuel": null
+    }
+  ]
+}

@@ -43,7 +43,7 @@ export function compilerMarkers(error: unknown, source: string) {
 
 export type CompilerRequest = {
     editor: number; generation: number; revision: number; request: number;
-    problem: number; language: "cpp" | "rust"; source: string;
+    problem: number; language: "cpp" | "rust" | "python"; source: string;
 };
 
 export function sameRequest(a: CompilerRequest | null, b: CompilerRequest | null) {

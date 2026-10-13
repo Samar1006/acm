@@ -1,0 +1,563 @@
+{
+  "title": "Wildcard Matching",
+  "description": "Decide whether a pattern `p` matches a string `s`. The pattern is made of lowercase letters and two wildcards:\n\n- `?` matches exactly one character, whatever it is.\n- `*` matches any run of characters, including an empty one.\n\nThe pattern must match the **whole** string. Return `true` if it does and `false` otherwise.\n\n### Constraints\n\n- `0 <= s.size() <= 1000`, and `s` contains only lowercase English letters.\n- `0 <= p.size() <= 1000`, and `p` contains only lowercase English letters, `?`, and `*`.\n- Inputs are passed as function arguments and the answer is returned from the function. Do not read from standard input or print the result.\n",
+  "reference": "bool wildcard_match(string s, string p) {\n    size_t i = 0, j = 0, star = string::npos, resume = 0;\n    while (i < s.size()) {\n        if (j < p.size() && (p[j] == '?' || p[j] == s[i])) {\n            ++i;\n            ++j;\n        } else if (j < p.size() && p[j] == '*') {\n            star = j++;\n            resume = i;\n        } else if (star != string::npos) {\n            j = star + 1;\n            i = ++resume;\n        } else {\n            return false;\n        }\n    }\n    while (j < p.size() && p[j] == '*') {\n        ++j;\n    }\n    return j == p.size();\n}\n",
+  "template": "bool wildcard_match(string s, string p) {\n    // Return whether the pattern p matches all of s.\n    return false;\n}\n",
+  "tags": [
+    "Strings",
+    "Greedy",
+    "Dynamic Programming"
+  ],
+  "examples": [
+    {
+      "test_number": 0,
+      "explanation": "The first * matches nothing, a matches a, the second * matches dce, and b matches the final b. The whole string is covered."
+    },
+    {
+      "test_number": 1,
+      "explanation": "? matches the c, but then the pattern needs an a and the string has a b. The match fails."
+    }
+  ],
+  "tests": [
+    {
+      "index": 0,
+      "input": {
+        "name": "wildcard_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "adceb"
+            }
+          },
+          {
+            "String": {
+              "Single": "*a*b"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 1,
+      "input": {
+        "name": "wildcard_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "cb"
+            }
+          },
+          {
+            "String": {
+              "Single": "?a"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 2,
+      "input": {
+        "name": "wildcard_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "aa"
+            }
+          },
+          {
+            "String": {
+              "Single": "a"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 3,
+      "input": {
+        "name": "wildcard_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "aa"
+            }
+          },
+          {
+            "String": {
+              "Single": "*"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 4,
+      "input": {
+        "name": "wildcard_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "acdcb"
+            }
+          },
+          {
+            "String": {
+              "Single": "a*c?b"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 5,
+      "input": {
+        "name": "wildcard_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": ""
+            }
+          },
+          {
+            "String": {
+              "Single": "*"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 6,
+      "input": {
+        "name": "wildcard_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": ""
+            }
+          },
+          {
+            "String": {
+              "Single": "?"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 7,
+      "input": {
+        "name": "wildcard_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "abc"
+            }
+          },
+          {
+            "String": {
+              "Single": "abc"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 8,
+      "input": {
+        "name": "wildcard_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "abcde"
+            }
+          },
+          {
+            "String": {
+              "Single": "a?c*"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 9,
+      "input": {
+        "name": "wildcard_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "mississippi"
+            }
+          },
+          {
+            "String": {
+              "Single": "m??*ss*?i*pi"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 10,
+      "input": {
+        "name": "wildcard_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab"
+            }
+          },
+          {
+            "String": {
+              "Single": "a*a*a*a*a*a*a*a*a*a*a*a*a*a*a*a*a*a*a*a*b"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 11,
+      "input": {
+        "name": "wildcard_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          },
+          {
+            "String": {
+              "Single": "*a**a**a**a**a**a**a**a**a**a**a**a**a**a**a**a**a**a**a**a**a**a**a**a**a**a**a**a**a**a*b"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 12,
+      "input": {
+        "name": "wildcard_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "abababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababab"
+            }
+          },
+          {
+            "String": {
+              "Single": "*ab?b*a"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 13,
+      "input": {
+        "name": "wildcard_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabc"
+            }
+          },
+          {
+            "String": {
+              "Single": "*c????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????*"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 14,
+      "input": {
+        "name": "wildcard_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "abbabbaaabbaababbbaab"
+            }
+          },
+          {
+            "String": {
+              "Single": "*b?abb?"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 15,
+      "input": {
+        "name": "wildcard_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "abbabababbaababba"
+            }
+          },
+          {
+            "String": {
+              "Single": "a*a??*b"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 16,
+      "input": {
+        "name": "wildcard_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "baabaaa"
+            }
+          },
+          {
+            "String": {
+              "Single": "ab??*"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": false
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 17,
+      "input": {
+        "name": "wildcard_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "bbaabaabbbabaabbbbbbabbba"
+            }
+          },
+          {
+            "String": {
+              "Single": "*a*ab*"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 18,
+      "input": {
+        "name": "wildcard_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "ababbababaa"
+            }
+          },
+          {
+            "String": {
+              "Single": "*??*???"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    },
+    {
+      "index": 19,
+      "input": {
+        "name": "wildcard_match",
+        "arguments": [
+          {
+            "String": {
+              "Single": "aabbbabbaabbbbb"
+            }
+          },
+          {
+            "String": {
+              "Single": "?a*"
+            }
+          }
+        ],
+        "return_type": {
+          "Bool": "Single"
+        }
+      },
+      "expected_output": {
+        "Bool": {
+          "Single": true
+        }
+      },
+      "max_fuel": null
+    }
+  ]
+}
