@@ -71,6 +71,31 @@ The first and only line of input contains two integers, `m` and `d` (`1 ≤ m, d
 Output a single integer, the minimum number of peanuts that Gena could have put out that could have resulted in his elephant leaving `d` milligrams of peanut debris.""",
     },
     {
+        "directory": "B-Callforproblemsround3-2",
+        "letter": "B",
+        "title": "Call for Problems, Round 3",
+        "difficulty": "Easy",
+        "tags": ["Greedy", "Sorting"],
+        "reference": "xiaowuc1.cpp",
+        "seconds": 1,
+        "description": """\
+The Call for Problems for the Pacific Northwest Regional has finished, and a number of problems were proposed. The judges voted on the difficulty of each problem. The Pacific Northwest Regional this year will feature some number of problems, and one of the goals is for no two problems to be too similar in difficulty.
+
+Specifically, if two different problems have difficulty ratings `d_i` and `d_j`, the difference between the two must be at least `t`.
+
+Given the problems proposed, compute the maximum number of problems that can be put on the Pacific Northwest Regional.
+
+### Input
+
+The first line contains two integers, `n` and `t` (`1 ≤ n ≤ 50`, `1 ≤ t ≤ 2500`).
+
+The next line contains `n` integers, the difficulties of the `n` problems proposed. Each difficulty is between 1 and 2500.
+
+### Output
+
+Output a single integer: the maximum number of problems that can be put on the Pacific Northwest Regional.""",
+    },
+    {
         "directory": "C-Gpacomputation-2",
         "letter": "C",
         "title": "GPA Computation",
@@ -206,6 +231,35 @@ The second line contains `n` integers: the solve times `s_1` through `s_n` (`1 �
 ### Output
 
 Output a single integer: the minimum number of problems the team needs to solve to float the dice, or `-1` if it is impossible.""",
+    },
+    {
+        "directory": "H-Fractalpainting-2",
+        "letter": "H",
+        "title": "Fractal Painting",
+        "difficulty": "Hard",
+        "tags": ["Math", "Geometry"],
+        "reference": "xiaowuc1.cpp",
+        "seconds": 1,
+        "description": """\
+A fractal painting consists of an infinite number of line segments. The first segment, called A, connects the points `(0, 0)` and `(x0, y0)`.
+
+The next two segments, B and C, connect `(x0, y0)` to `(x1, y1)` and `(x0, y0)` to `(x2, y2)`, respectively.
+
+The rest of the painting is defined recursively. We draw two segments D and E from `(x1, y1)` so that the segments B, D, E are *similar* to the segments A, B, C. Here, similar segments can be matched point to point by translating, rotating, and scaling the original segments.
+
+Similarly, we draw segments F and G from `(x2, y2)` so that the segments C, F, G are similar to the segments A, B, C.
+
+This procedure continues indefinitely.
+
+Find out whether there is a rectangle (of any size) that contains the entire fractal painting.
+
+### Input
+
+The first line of input contains a single integer `T` (`1 ≤ T ≤ 10^4`), the number of test cases. Each of the next `T` lines describes a single test case with six integers `x0`, `y0`, `x1`, `y1`, `x2`, and `y2`, in order. All coordinates are between `-10^4` and `10^4`, inclusive. It is guaranteed that `(0, 0)`, `(x0, y0)`, `(x1, y1)`, and `(x2, y2)` are all distinct points.
+
+### Output
+
+For every test case, output `YES` if the entire fractal painting fits in some rectangular frame. Output `NO` if there is no such rectangle.""",
     },
     {
         "directory": "I-Servercorridor-2",
