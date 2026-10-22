@@ -1,6 +1,6 @@
 import { ReactNode, useState } from "react";
 import useSWR from "swr";
-import { FunctionTypeDiffDisplay, FunctionTypeDisplay, TestResult } from ".";
+import { FunctionTypeDiffDisplay, FunctionTypeDisplay, programInput, TestResult } from ".";
 import { api_url, fetcher } from "../../../../utils/fetcher";
 import ErrorBox from "../../../error-box";
 import Modal from "../../../modal";
@@ -98,6 +98,8 @@ export function TestResultInner({ index, input, output, expected_output, error, 
         );
     }
 
+    const program = input && programInput(input) !== undefined;
+
     return (
         <div className={`rounded-md outline outline-4 p-4 flex flex-col gap-4 bg-white dark:bg-black ${containerClasses}`}>
             <div>
@@ -133,7 +135,7 @@ export function TestResultInner({ index, input, output, expected_output, error, 
 
                 <div className="flex flex-col gap-4">
                     {input.arguments.map((arg, i) =>
-                        <FunctionTypeDisplay key={i} data={arg} />
+                        <FunctionTypeDisplay key={i} data={arg} label={program ? "Standard input" : undefined} />
                     )}
                 </div>
             </div>}
@@ -142,12 +144,12 @@ export function TestResultInner({ index, input, output, expected_output, error, 
                 <div>
                     <b>Expected</b>
 
-                    <FunctionTypeDisplay data={expected_output} />
+                    <FunctionTypeDisplay data={expected_output} label={program ? "Standard output" : undefined} />
                 </div>
                 <div>
                     <b>Output</b>
 
-                    <FunctionTypeDiffDisplay output={output} expected={expected_output} />
+                    <FunctionTypeDiffDisplay output={output} expected={expected_output} label={program ? "Standard output" : undefined} />
                 </div>
             </div>}
         </div>

@@ -1,6 +1,6 @@
 use serde::{ser::SerializeStruct, Deserialize, Serialize};
 use sqlx::{sqlite::SqliteRow, FromRow, Row};
-use wasm_memory::{FunctionValue, WasmFunctionCall};
+use wasm_memory::{ContainerVariant, FunctionValue, WasmFunctionCall};
 
 #[derive(Deserialize, Debug, Serialize, Clone, PartialEq)]
 pub struct Test {
@@ -42,11 +42,24 @@ impl Test {
             .map(|fuel| (fuel as f64 * runtime_multiplier.unwrap_or(1.5)) as i64);
     }
 
+    /// Whether `output` answers this test. A whole program's output is judged
+    /// like a contest answer; a function's return value must equal the expected one.
+    pub fn accepts(&self, output: &FunctionValue) -> bool {
+        match (self.input.stdin(), &self.expected_output, output) {
+            (
+                Some(_),
+                FunctionValue::String(ContainerVariant::Single(expected)),
+                FunctionValue::String(ContainerVariant::Single(actual)),
+            ) => super::stdio::outputs_match(expected, actual),
+            _ => output == &self.expected_output,
+        }
+    }
+
     pub fn make_result(self, output: FunctionValue, fuel: u64) -> TestResult {
         TestResult {
             id: self.id,
             index: self.index,
-            success: output == self.expected_output,
+            success: self.accepts(&output),
             input: self.input,
             expected_output: self.expected_output,
             output: Some(output),
@@ -173,5 +186,49 @@ impl FromRow<'_, SqliteRow> for TestResult {
             max_fuel: row.try_get("max_runtime")?,
             hidden: row.try_get("hidden")?,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test(input: WasmFunctionCall, expected: FunctionValue) -> Test {
+        Test {
+            id: 0,
+            index: 0,
+            max_fuel: None,
+            input,
+            expected_output: expected,
+        }
+    }
+
+    fn text(value: &str) -> FunctionValue {
+        FunctionValue::String(ContainerVariant::Single(value.into()))
+    }
+
+    #[test]
+    fn program_output_is_judged_by_tokens() {
+        let program = test(
+            WasmFunctionCall::program("3\nA3\nE3\nD3\n"),
+            text("1.6666666666666667\n"),
+        );
+        assert!(program.accepts(&text("1.666667")));
+        assert!(!program.accepts(&text("1.67")));
+        assert!(program.clone().make_result(text("1.6666667\n"), 5).success);
+    }
+
+    #[test]
+    fn function_results_still_need_equal_values() {
+        let function = test(
+            WasmFunctionCall::new(
+                "greet",
+                vec![],
+                wasm_memory::FunctionType::String(wasm_memory::ContainerVariantType::Single),
+            ),
+            text("a b"),
+        );
+        assert!(function.accepts(&text("a b")));
+        assert!(!function.accepts(&text("a  b")));
     }
 }

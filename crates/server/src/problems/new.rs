@@ -7,9 +7,13 @@ use tokio::sync::broadcast::Sender;
 
 use super::{
     extras::{replace_examples, replace_tags, ExampleForm},
-    Difficulty, Problem,
+    Difficulty, Problem, STDIO_RUNNER,
 };
-use crate::{auth::Claims, error::ServerError, ws::BroadcastMessage};
+use crate::{
+    auth::Claims,
+    error::{FormValidationError, ServerError},
+    ws::BroadcastMessage,
+};
 
 #[derive(Deserialize)]
 pub struct NewForm {
@@ -28,6 +32,13 @@ pub struct NewForm {
     /// Tests from this form to publish as worked examples.
     #[serde(default)]
     examples: Vec<ExampleForm>,
+    /// `stdio` for a problem solved by a complete C++ program, whose tests are
+    /// all whole-program runs. Empty for a function problem.
+    #[serde(default)]
+    runner: String,
+    /// Test numbers whose input and expected output students never see.
+    #[serde(default)]
+    hidden_tests: Vec<i64>,
 }
 
 #[derive(Serialize)]
@@ -42,6 +53,26 @@ pub async fn new(
     Json(form): Json<NewForm>,
 ) -> Result<Json<NewBody>, ServerError> {
     claims.validate_officer()?;
+
+    let program = match form.runner.as_str() {
+        "" => false,
+        STDIO_RUNNER => true,
+        _ => return Err(FormValidationError::InvalidField("runner".into()).into()),
+    };
+    if form
+        .tests
+        .iter()
+        .any(|test| test.input.stdin().is_some() != program)
+    {
+        return Err(FormValidationError::InvalidField("tests".into()).into());
+    }
+    if form
+        .hidden_tests
+        .iter()
+        .any(|number| !form.tests.iter().any(|test| test.index == *number))
+    {
+        return Err(FormValidationError::InvalidField("hidden_tests".into()).into());
+    }
 
     let mut tx = pool.begin().await.map_err(|_| ServerError::InternalError)?;
 
@@ -75,7 +106,7 @@ pub async fn new(
     )
     .bind(form.title)
     .bind(form.description)
-    .bind("")
+    .bind(&form.runner)
     .bind(form.reference)
     .bind(form.template)
     .bind(form.activity_id)
@@ -117,6 +148,18 @@ pub async fn new(
             log::error!("{e}");
             ServerError::InternalError
         })?;
+    }
+
+    for number in &form.hidden_tests {
+        sqlx::query("UPDATE tests SET hidden = true WHERE problem_id = ? AND test_number = ?")
+            .bind(problem.id)
+            .bind(number)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| {
+                log::error!("{e}");
+                ServerError::InternalError
+            })?;
     }
 
     if let Some(difficulty) = &form.difficulty {
@@ -219,5 +262,74 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(count, 7);
+    }
+
+    #[tokio::test]
+    async fn stdio_problems_store_their_runner_and_hidden_tests() {
+        let pool = SqlitePool::connect("sqlite::memory:").await.unwrap();
+        sqlx::migrate!("../../migrations").run(&pool).await.unwrap();
+        let (broadcast, _) = tokio::sync::broadcast::channel(8);
+        let officer = || Claims {
+            user_id: 1,
+            auth: Auth::Officer,
+            exp: 0,
+        };
+        let form = |runner: &str, hidden: &str| -> NewForm {
+            let tests = [0, 1].map(|index| {
+                serde_json::json!({
+                    "index": index,
+                    "max_fuel": null,
+                    "input": wasm_memory::WasmFunctionCall::program("1 2\n"),
+                    "expected_output": {"String": {"Single": "3\n"}},
+                })
+            });
+            serde_json::from_value(serde_json::json!({
+                "title": format!("Sum {runner} {hidden}"),
+                "description": "",
+                "reference": "int main() {}",
+                "template": "",
+                "runner": runner,
+                "hidden_tests": serde_json::from_str::<serde_json::Value>(hidden).unwrap(),
+                "examples": [{"test_number": 0}],
+                "tests": tests,
+            }))
+            .unwrap()
+        };
+        let create = |form| {
+            new(
+                Extension(pool.clone()),
+                Extension(broadcast.clone()),
+                officer(),
+                Json(form),
+            )
+        };
+
+        // Program tests need the stdio runner, and hidden tests must exist.
+        assert!(create(form("", "[1]")).await.is_err());
+        assert!(create(form("python", "[1]")).await.is_err());
+        assert!(create(form("stdio", "[7]")).await.is_err());
+
+        let id = create(form("stdio", "[1]")).await.unwrap().0.id;
+        let (runner,): (String,) = sqlx::query_as("SELECT runner FROM problems WHERE id = ?")
+            .bind(id)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+        assert_eq!(runner, STDIO_RUNNER);
+        let hidden: Vec<(i64, bool)> = sqlx::query_as(
+            "SELECT test_number, hidden FROM tests WHERE problem_id = ? ORDER BY test_number",
+        )
+        .bind(id)
+        .fetch_all(&pool)
+        .await
+        .unwrap();
+        assert_eq!(hidden, [(0, false), (1, true)]);
+        let (examples,): (i64,) =
+            sqlx::query_as("SELECT count(*) FROM problem_examples WHERE problem_id = ?")
+                .bind(id)
+                .fetch_one(&pool)
+                .await
+                .unwrap();
+        assert_eq!(examples, 1);
     }
 }

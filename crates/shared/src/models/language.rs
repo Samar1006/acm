@@ -54,6 +54,15 @@ fn unsupported() -> RunnerError {
     }
 }
 
+/// Whole-program problems read standard input, which only C++ submissions support.
+pub(crate) fn program_unsupported() -> RunnerError {
+    RunnerError::UnsupportedSignature {
+        message:
+            "This problem takes a complete C++ program that reads standard input. Submit it in C++."
+                .into(),
+    }
+}
+
 fn rust_type(ty: FunctionType) -> Result<String, RunnerError> {
     let inner = match ty {
         FunctionType::Int(_) => "i32",
@@ -203,6 +212,9 @@ impl RustSignature {
     ) -> Result<Self, RunnerError> {
         let mut signature = None;
         for call in calls {
+            if call.stdin().is_some() {
+                return Err(program_unsupported());
+            }
             if !valid_ident(&call.name) {
                 return Err(unsupported());
             }
@@ -623,6 +635,20 @@ fn __acm_encode_grid<T>(v: Vec<Vec<T>>, mut write: impl FnMut(T, &mut Vec<u8>)) 
 mod tests {
     use super::*;
     use wasm_memory::{ContainerVariant, FunctionValue};
+
+    #[test]
+    fn whole_program_problems_reject_rust_and_python() {
+        let calls = [WasmFunctionCall::program("1\n")];
+        for error in [
+            RustSignature::from_calls(&calls).unwrap_err(),
+            crate::models::python::PythonSignature::from_calls(&calls).unwrap_err(),
+        ] {
+            assert!(matches!(
+                error,
+                RunnerError::UnsupportedSignature { message } if message.contains("C++")
+            ));
+        }
+    }
 
     fn call() -> WasmFunctionCall {
         WasmFunctionCall::new(

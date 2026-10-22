@@ -7,7 +7,11 @@ use sqlx::SqlitePool;
 use tokio::sync::broadcast::{self, Sender};
 use wasm_memory::WasmFunctionCall;
 
-use crate::{auth::Claims, error::ServerError, ws::BroadcastMessage};
+use crate::{
+    auth::Claims,
+    error::{FormValidationError, ServerError},
+    ws::BroadcastMessage,
+};
 
 use super::{add_job, JobMap, JobQueue, JobStatus, Queueable};
 
@@ -30,11 +34,12 @@ pub async fn custom(
 ) -> Result<Json<JobStatus>, ServerError> {
     claims.validate_logged_in()?;
 
-    let (reference, runtime_multiplier): (String, Option<f64>) = sqlx::query_as(
+    let (reference, runtime_multiplier, runner): (String, Option<f64>, String) = sqlx::query_as(
         r#"
         SELECT
             reference,
-            runtime_multiplier
+            runtime_multiplier,
+            runner
         FROM
             problems
         WHERE
@@ -46,6 +51,12 @@ pub async fn custom(
     .fetch_one(&pool)
     .await
     .map_err(|_| ServerError::NotFound)?;
+
+    // Custom input must take the same form as the problem's own tests.
+    let program = runner == crate::problems::STDIO_RUNNER;
+    if form.input.stdin().is_some() != program {
+        return Err(FormValidationError::InvalidField("input".into()).into());
+    }
 
     match form.language {
         Language::Cpp => {}

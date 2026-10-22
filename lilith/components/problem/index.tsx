@@ -30,6 +30,8 @@ type Problem = {
     title: string;
     description: string;
     template: string;
+    /// "stdio" when the answer is a complete C++ program instead of a function.
+    runner?: string;
     competition_id?: number;
 };
 
@@ -52,15 +54,19 @@ const generatedTemplates = { rust: "Rust", python: "Python" } as const;
 function ProblemEditorWrapper({
     id,
     template,
+    program,
     hideEditorScrollbars,
 }: {
     id?: number;
     template?: string;
+    /// Whole-program problems read standard input, which only C++ supports.
+    program: boolean;
     hideEditorScrollbars?: boolean;
 }) {
-    const language = useStore((state) =>
+    const chosen = useStore((state) =>
         id ? (state.problemLanguages[id] ?? "cpp") : "cpp",
     );
+    const language: Language = program ? "cpp" : chosen;
     const saved = useStore((state) =>
         id ? getProblemImpl(state, id, language) : undefined,
     );
@@ -87,6 +93,11 @@ function ProblemEditorWrapper({
             saver.flush();
         };
     }, [id, language, saver, setProblemImpl]);
+
+    // Submissions and custom runs read the stored language, so keep it on C++.
+    useEffect(() => {
+        if (id && program && chosen !== "cpp") setLanguage(id, "cpp");
+    }, [id, program, chosen, setLanguage]);
 
     useEffect(() => {
         window.addEventListener("pagehide", saver.flush);
@@ -123,8 +134,8 @@ function ProblemEditorWrapper({
                     className="bg-white dark:bg-neutral-900"
                 >
                     <option value="cpp">C++</option>
-                    <option value="rust">Rust</option>
-                    <option value="python">Python</option>
+                    {!program && <option value="rust">Rust</option>}
+                    {!program && <option value="python">Python</option>}
                 </select>
             </label>
                 <button
@@ -135,6 +146,13 @@ function ProblemEditorWrapper({
                 </button>
                 <span className="ml-auto">{id && <Timer id={id} />}</span>
             </div>
+            {program && (
+                <p className="px-2 text-sm">
+                    Write a complete C++ program with <code>main</code>. Read
+                    the input from standard input (<code>cin</code>) and print
+                    the answer to standard output (<code>cout</code>).
+                </p>
+            )}
             {language === "rust" && (
                 <p className="px-2 text-sm">
                     Rust standard library only. Cargo crates are not available.
@@ -246,6 +264,7 @@ export default function ProblemView({
                     <ProblemEditorWrapper
                         id={id}
                         template={data?.template}
+                        program={data?.runner === "stdio"}
                         hideEditorScrollbars={hideEditorScrollbars}
                     />
                     <CodeRunner />

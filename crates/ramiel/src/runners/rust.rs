@@ -109,6 +109,7 @@ impl Runner for Rust {
         let reference = cplusplus::compile_problem(
             &prefix.join("reference"),
             &cplusplus::process_file(&form.reference),
+            cplusplus::Build::Functions,
             deadline,
             timeout_message,
         )

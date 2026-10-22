@@ -47,15 +47,24 @@ export type ContainerVariant<T> =
 
 export type ContainerVariantType = "Grid" | "Graph" | "List" | "Single";
 
+/// Standard input, when a test runs a whole program instead of calling a function.
+export function programInput(input: WasmFunctionCall): string | undefined {
+    const [argument] = input.arguments;
+    if (input.name !== "main" || input.arguments.length !== 1 || !("String" in argument)) return undefined;
+    const variant = argument.String;
+    return "Single" in variant ? variant.Single : undefined;
+}
+
 export interface TestResult extends Test {
     output: FunctionValue;
     success: boolean;
     fuel: number;
 }
 
-export function FunctionTypeDisplay({ data }: { data: FunctionValue }): JSX.Element {
+export function FunctionTypeDisplay({ data, label }: { data: FunctionValue, label?: string }): JSX.Element {
     // KILL JAVASCRIPT I SWEAR TO GOD
     let [[type, variant]] = Object.entries(data);
+    type = label ?? type;
 
     if ("Grid" in variant) {
         return <GridDisplay dataType={type} data={variant.Grid} />;
@@ -70,8 +79,9 @@ export function FunctionTypeDisplay({ data }: { data: FunctionValue }): JSX.Elem
     return <></>;
 }
 
-export function FunctionTypeDiffDisplay({ output, expected }: { output: FunctionValue, expected: FunctionValue }): JSX.Element {
+export function FunctionTypeDiffDisplay({ output, expected, label }: { output: FunctionValue, expected: FunctionValue, label?: string }): JSX.Element {
     let [[type, outputVariant]] = Object.entries(output);
+    type = label ?? type;
     let [[_type, expectedVariant]] = Object.entries(expected);
 
     if ("Grid" in outputVariant && "Grid" in expectedVariant) {

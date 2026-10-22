@@ -105,6 +105,9 @@ impl PythonSignature {
     ) -> Result<Self, RunnerError> {
         let mut signature = None;
         for call in calls {
+            if call.stdin().is_some() {
+                return Err(super::language::program_unsupported());
+            }
             if !valid_ident(&call.name) {
                 return Err(unsupported());
             }

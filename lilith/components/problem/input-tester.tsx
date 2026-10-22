@@ -10,7 +10,7 @@ import { TestEditor } from "../test-editor";
 import { formatValue } from "./examples";
 import { DiagnosticsDisplay } from "./submission";
 import { isRunnerError } from "./submission/error";
-import { Test, TestResult } from "./submission/tests";
+import { FunctionValue, programInput, Test, TestResult } from "./submission/tests";
 import { TestResultInner } from "./submission/tests/test_result_view";
 
 type CustomInputResponse = {
@@ -44,6 +44,10 @@ export default function InputTester() {
     if (!data || error || !problem_id) return null;
 
     const format = data.input;
+    const program = programInput(format) !== undefined;
+    // A program's output is plain text, not a value written as code.
+    const show = (value: FunctionValue) =>
+        program && "String" in value && "Single" in value.String ? value.String.Single : formatValue(value);
     // Saved cases from an older version of the problem may no longer fit its arguments.
     const usable = saved?.filter((item) => item.args.length === format.arguments.length);
     const cases: CustomCase[] = usable && usable.length > 0
@@ -155,12 +159,18 @@ export default function InputTester() {
 
                             <label className="flex flex-col gap-1 text-sm">
                                 Expected output (optional)
-                                <input
-                                    className="border-neutral-300 dark:border-neutral-700 border rounded p-2 bg-neutral-50 dark:bg-neutral-900 font-mono"
-                                    value={item.expected}
-                                    placeholder={`e.g. ${formatValue(data!.expected_output)}`}
-                                    onChange={(event) => change(item.key, { expected: event.target.value })}
-                                />
+                                {program
+                                    ? <textarea
+                                        className="border-neutral-300 dark:border-neutral-700 border rounded p-2 bg-neutral-50 dark:bg-neutral-900 font-mono resize-y"
+                                        value={item.expected}
+                                        onChange={(event) => change(item.key, { expected: event.target.value })}
+                                    />
+                                    : <input
+                                        className="border-neutral-300 dark:border-neutral-700 border rounded p-2 bg-neutral-50 dark:bg-neutral-900 font-mono"
+                                        value={item.expected}
+                                        placeholder={`e.g. ${formatValue(data!.expected_output)}`}
+                                        onChange={(event) => change(item.key, { expected: event.target.value })}
+                                    />}
                             </label>
 
                             <div className="flex items-center gap-2">
@@ -187,10 +197,10 @@ export default function InputTester() {
 
                             {outcome?.result && <>
                                 {output && wanted !== "" &&
-                                    <p className={normalize(formatValue(output)) === wanted ? "text-green-600" : "text-red-600"}>
-                                        {normalize(formatValue(output)) === wanted
+                                    <p className={normalize(show(output)) === wanted ? "text-green-600" : "text-red-600"}>
+                                        {normalize(show(output)) === wanted
                                             ? "Matches your expected output."
-                                            : `Differs from your expected output: got ${formatValue(output)}.`}
+                                            : `Differs from your expected output: got ${show(output)}.`}
                                     </p>}
                                 <div className="m-1">
                                     <TestResultInner {...outcome.result.result} index={i + 1} />

@@ -21,6 +21,7 @@ use tokio::{
     io::{AsyncRead, AsyncReadExt, AsyncWriteExt},
     process::Child,
 };
+use wasm_memory::WasmFunctionCall;
 
 use super::{run_command, run_test_timed, timeout_error, Runner, TestResults, WasmRuntime};
 
@@ -92,8 +93,10 @@ impl Runner for CPlusPlus {
             .await?;
 
         let implementation = process_file(&form.implementation);
+        let build = Build::for_calls(form.tests.iter().map(|test| &test.input))?;
 
-        let command = compile_problem(&prefix, &implementation, deadline, timeout_message).await?;
+        let command =
+            compile_problem(&prefix, &implementation, build, deadline, timeout_message).await?;
 
         // MAYBE WHEN WE HAVE MORE RAM
         // let tests = join_all(
@@ -139,7 +142,9 @@ impl Runner for CPlusPlus {
 
         // TODO actually get unique function names from tests
         let reference = process_file(&form.reference);
-        let command = compile_problem(&prefix, &reference, deadline, timeout_message).await?;
+        let build = Build::for_calls(&form.inputs)?;
+        let command =
+            compile_problem(&prefix, &reference, build, deadline, timeout_message).await?;
 
         let mut outputs = Vec::new();
         for (index, input) in (0_i64..).zip(form.inputs) {
@@ -197,11 +202,19 @@ impl Runner for CPlusPlus {
         // println!("REFERENCE: {reference}");
         // println!("IMPLEMENTATION: {implementation}");
 
-        let reference_command =
-            compile_problem(&reference_prefix, &reference, deadline, timeout_message).await?;
+        let build = Build::for_calls([&form.input])?;
+        let reference_command = compile_problem(
+            &reference_prefix,
+            &reference,
+            build,
+            deadline,
+            timeout_message,
+        )
+        .await?;
         let implementation_command = compile_problem(
             &implementation_prefix,
             &implementation,
+            build,
             deadline,
             timeout_message,
         )
@@ -254,14 +267,66 @@ pub(super) fn process_file(file: &str) -> String {
 
     // include headers automatically
     new_file.push_str(bits_cpp);
-    new_file.push_str(file);
+    for line in file.split_inclusive('\n') {
+        // libc++ has no <bits/stdc++.h>, but the default header already includes
+        // the whole standard library. Blanking the line keeps line numbers.
+        if is_bits_stdcpp_include(line) {
+            new_file.push_str(if line.ends_with('\n') { "\n" } else { "" });
+        } else {
+            new_file.push_str(line);
+        }
+    }
 
     new_file
+}
+
+fn is_bits_stdcpp_include(line: &str) -> bool {
+    let Some(rest) = line.trim().strip_prefix('#') else {
+        return false;
+    };
+    let Some(rest) = rest.trim_start().strip_prefix("include") else {
+        return false;
+    };
+    rest.trim() == "<bits/stdc++.h>"
+}
+
+/// What a C++ source is compiled into.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(super) enum Build {
+    /// A library whose functions the tests call directly.
+    Functions,
+    /// A complete program with `main`, run once per test on standard input.
+    Program,
+}
+
+impl Build {
+    /// Whole-program tests need a program; every other test calls a function.
+    /// One job cannot mix both.
+    pub(super) fn for_calls<'a>(
+        calls: impl IntoIterator<Item = &'a WasmFunctionCall>,
+    ) -> Result<Self, RunnerError> {
+        let mut build = None;
+        for call in calls {
+            let current = if call.stdin().is_some() {
+                Build::Program
+            } else {
+                Build::Functions
+            };
+            if build.is_some_and(|previous| previous != current) {
+                return Err(RunnerError::UnsupportedSignature {
+                    message: "Tests cannot mix whole programs and function calls.".into(),
+                });
+            }
+            build = Some(current);
+        }
+        Ok(build.unwrap_or(Build::Functions))
+    }
 }
 
 pub(super) async fn compile_problem(
     prefix: &Path,
     implementation: &str,
+    build: Build,
     deadline: tokio::time::Instant,
     timeout_message: &str,
 ) -> Result<String, RunnerError> {
@@ -272,14 +337,17 @@ pub(super) async fn compile_problem(
     let wasm_filename = prefix.join("out.wasm");
     let implementation_filename = prefix.join("implementation.cpp");
     let marker_filename = prefix.join(".compile-cache-key");
-    let cache_key = CACHE_VERSION;
+    let cache_key = match build {
+        Build::Functions => CACHE_VERSION.to_string(),
+        Build::Program => format!("{CACHE_VERSION}-program"),
+    };
 
     if cache_matches(
         &implementation_filename,
         &wasm_filename,
         &marker_filename,
         implementation,
-        cache_key,
+        &cache_key,
     )
     .await?
     {
@@ -324,12 +392,13 @@ pub(super) async fn compile_problem(
         .stdout(Stdio::null())
         .stderr(Stdio::piped())
         .kill_on_drop(true)
+        .args(match build {
+            Build::Functions => &["-Wl,--no-entry", "-Wl,--export-all", "-mexec-model=reactor"][..],
+            Build::Program => &[][..],
+        })
         .args([
             "-O3",
-            "-Wl,--no-entry",
             "-Wl,--demangle",
-            "-Wl,--export-all",
-            "-mexec-model=reactor",
             "-msimd128",
             "-Wall",
             "-Wextra",
@@ -368,7 +437,7 @@ pub(super) async fn compile_problem(
         ));
     }
 
-    if let Err(error) = fs::write(&marker_filename, cache_key).await {
+    if let Err(error) = fs::write(&marker_filename, &cache_key).await {
         invalidate_compile_outputs(&marker_filename, &wasm_filename).await;
         return Err(error.into());
     }
@@ -678,6 +747,39 @@ mod tests {
     use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
     #[test]
+    fn bits_stdcpp_includes_are_blanked_without_moving_lines() {
+        let header_lines = include_str!("default_header.h").lines().count();
+        let source = "#include <bits/stdc++.h>\n  #  include<bits/stdc++.h>  \nint main() {}\n";
+        let processed = process_file(source);
+        let lines: Vec<&str> = processed.lines().skip(header_lines).collect();
+        assert_eq!(lines, ["", "", "int main() {}"]);
+        assert!(process_file("#include <vector>\n").ends_with("#include <vector>\n"));
+        assert!(
+            process_file("// #include <bits/stdc++.h>").ends_with("// #include <bits/stdc++.h>")
+        );
+    }
+
+    #[test]
+    fn whole_program_tests_need_a_program_build() {
+        let program = WasmFunctionCall::program("1 2\n");
+        let function = WasmFunctionCall::new(
+            "add",
+            vec![],
+            wasm_memory::FunctionType::Int(wasm_memory::ContainerVariantType::Single),
+        );
+        assert_eq!(
+            Build::for_calls([&program, &program]).unwrap(),
+            Build::Program
+        );
+        assert_eq!(Build::for_calls([&function]).unwrap(), Build::Functions);
+        assert_eq!(Build::for_calls([]).unwrap(), Build::Functions);
+        assert!(matches!(
+            Build::for_calls([&program, &function]),
+            Err(RunnerError::UnsupportedSignature { .. })
+        ));
+    }
+
+    #[test]
     fn compiler_failures_without_source_locations_remain_visible() {
         for message in ["rosetta error: executable access denied", ""] {
             let RunnerError::CompilationError { diagnostics } =
@@ -768,6 +870,7 @@ mod tests {
         let result = compile_problem(
             &directory,
             "new source",
+            Build::Functions,
             tokio::time::Instant::now() + Duration::from_secs(1),
             "timed out",
         )
@@ -850,6 +953,7 @@ mod tests {
         let result = compile_problem(
             &directory,
             "new source",
+            Build::Functions,
             tokio::time::Instant::now() + Duration::from_secs(1),
             "timed out",
         )

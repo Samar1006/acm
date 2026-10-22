@@ -16,6 +16,10 @@ mod recent_submission;
 mod recent_tests;
 mod tests;
 
+/// The `runner` of a problem solved by a complete C++ program that reads
+/// standard input. Function problems leave `runner` empty.
+pub const STDIO_RUNNER: &str = "stdio";
+
 #[derive(Serialize, Deserialize, Clone, Type)]
 pub enum Difficulty {
     Easy,

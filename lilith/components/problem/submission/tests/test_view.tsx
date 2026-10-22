@@ -2,7 +2,7 @@ import { useState } from "react";
 import useSWR from "swr";
 import { api_url, fetcher } from "../../../../utils/fetcher";
 import Modal from "../../../modal";
-import { FunctionValue, FunctionTypeDisplay, Test } from ".";
+import { FunctionValue, FunctionTypeDisplay, programInput, Test } from ".";
 import { GridDisplay } from "./grid";
 import ErrorBox from "../../../error-box";
 
@@ -72,13 +72,13 @@ function TestView({ index, problemId }: TestDescription): JSX.Element {
 
             <div className="flex flex-col gap-4">
                 {data.input.arguments.map((arg, i) =>
-                    <FunctionTypeDisplay key={i} data={arg} />
+                    <FunctionTypeDisplay key={i} data={arg} label={programInput(data.input) !== undefined ? "Standard input" : undefined} />
                 )}
             </div>
 
             <b>Expected</b>
 
-            <FunctionTypeDisplay data={data.expected_output} />
+            <FunctionTypeDisplay data={data.expected_output} label={programInput(data.input) !== undefined ? "Standard output" : undefined} />
         </div>
     );
 }

@@ -364,11 +364,42 @@ pub struct WasmFunctionCall {
 impl WasmFunctionCall {
     const PAGE_OFFSET: usize = 4;
 
+    /// The name of a call that runs a whole program instead of one function.
+    pub const PROGRAM: &'static str = "main";
+
     pub fn new(name: &str, arguments: Vec<FunctionValue>, return_type: FunctionType) -> Self {
         WasmFunctionCall {
             name: name.into(),
             arguments,
             return_type,
+        }
+    }
+
+    /// A call that runs a complete program with `stdin` as standard input. The
+    /// program's standard output is its result.
+    pub fn program(stdin: &str) -> Self {
+        Self::new(
+            Self::PROGRAM,
+            vec![FunctionValue::String(ContainerVariant::Single(
+                stdin.into(),
+            ))],
+            FunctionType::String(ContainerVariantType::Single),
+        )
+    }
+
+    /// Standard input, when this call runs a whole program.
+    pub fn stdin(&self) -> Option<&str> {
+        match (
+            self.name.as_str(),
+            self.arguments.as_slice(),
+            self.return_type,
+        ) {
+            (
+                Self::PROGRAM,
+                [FunctionValue::String(ContainerVariant::Single(stdin))],
+                FunctionType::String(ContainerVariantType::Single),
+            ) => Some(stdin),
+            _ => None,
         }
     }
 

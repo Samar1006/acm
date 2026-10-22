@@ -13,13 +13,13 @@ use std::{
     sync::Arc,
     time::Duration,
 };
-use wasm_memory::{FunctionValue, WasmFunctionCall};
+use wasm_memory::{ContainerVariant, FunctionValue, WasmFunctionCall};
 
 use wasmtime::{Cache, Config, Engine, Linker, Module, Store, StoreLimits, StoreLimitsBuilder};
 use wasmtime_wasi::{
     p1::{add_to_linker_sync, WasiP1Ctx},
-    p2::pipe::MemoryOutputPipe,
-    WasiCtxBuilder,
+    p2::pipe::{MemoryInputPipe, MemoryOutputPipe},
+    I32Exit, WasiCtxBuilder,
 };
 
 mod compiler;
@@ -180,7 +180,11 @@ fn finish_test(
 ) -> Result<(TestResult, String), RunnerError> {
     match outcome {
         Ok((result, output, fuel)) => {
+            let program = test.input.stdin().is_some();
             let mut test_result = test.make_result(result, fuel);
+            if program {
+                shorten_program_output(&mut test_result.output);
+            }
 
             if fuel > clamp_fuel(test_result.max_fuel) {
                 test_result.success = false;
@@ -194,6 +198,23 @@ fn finish_test(
             String::new(),
         )),
         Err(e) => Err(e),
+    }
+}
+
+/// A whole program's output is judged in full, but only this much of it is
+/// returned, so a huge wrong answer is not stored with every submission.
+const MAX_RETURNED_PROGRAM_OUTPUT: usize = 64 * 1024;
+
+fn shorten_program_output(output: &mut Option<FunctionValue>) {
+    if let Some(FunctionValue::String(ContainerVariant::Single(text))) = output {
+        if text.len() > MAX_RETURNED_PROGRAM_OUTPUT {
+            let mut end = MAX_RETURNED_PROGRAM_OUTPUT;
+            while !text.is_char_boundary(end) {
+                end -= 1;
+            }
+            text.truncate(end);
+            text.push_str("\n[output truncated]");
+        }
     }
 }
 
@@ -283,11 +304,17 @@ pub(crate) async fn run_command(
         })?;
 
         let stdout = MemoryOutputPipe::new(MAX_MEMORY);
+        let stdin = input.stdin().map(|stdin| stdin.as_bytes().to_vec());
+        let mut wasi = WasiCtxBuilder::new();
+        wasi.stdout(stdout.clone());
+        if let Some(stdin) = &stdin {
+            wasi.stdin(MemoryInputPipe::new(stdin.clone()));
+        }
 
         let mut store = Store::new(
             &blocking_engine,
             MyState {
-                wasi: WasiCtxBuilder::new().stdout(stdout.clone()).build_p1(),
+                wasi: wasi.build_p1(),
                 limits: StoreLimitsBuilder::new()
                     .memory_size(MAX_MEMORY)
                     .instances(2)
@@ -326,6 +353,10 @@ pub(crate) async fn run_command(
                 message: "Failed to open file".to_string(),
             }
         })?;
+
+        if stdin.is_some() {
+            return run_program(&linker, store, &module, &stdout, &blocking_timeout_message);
+        }
 
         const FUEL_DEFAULT: u64 = 100_000_000_000;
         let fuel_before_initialize = store.get_fuel().map_err(|e| {
@@ -418,6 +449,49 @@ pub(crate) async fn run_command(
             let _ = handle.await;
             Err(timeout_error(&timeout_message))
         }
+    }
+}
+
+/// Runs a complete program from `_start`. Its standard output is the result,
+/// so no separate debug output is returned. All fuel it uses counts, including
+/// static initialization.
+fn run_program(
+    linker: &Linker<MyState>,
+    mut store: Store<MyState>,
+    module: &Module,
+    stdout: &MemoryOutputPipe,
+    timeout_message: &str,
+) -> Result<(FunctionValue, String, u64), RunnerError> {
+    let fuel_error = |e: wasmtime::Error| {
+        log::error!("failed to read program fuel: {e}");
+        RunnerError::InternalServerError {
+            message: "Failed to read wasm fuel".to_string(),
+        }
+    };
+    let fuel_before = store.get_fuel().map_err(fuel_error)?;
+    let outcome = linker
+        .instantiate(&mut store, module)
+        .and_then(|instance| instance.get_typed_func::<(), ()>(&mut store, "_start"))
+        .and_then(|start| start.call(&mut store, ()));
+    let fuel = fuel_before.saturating_sub(store.get_fuel().map_err(fuel_error)?);
+    drop(store);
+
+    let output = String::from_utf8_lossy(&stdout.contents()).into_owned();
+    let result = FunctionValue::String(ContainerVariant::Single(output));
+    match outcome {
+        Ok(()) => Ok((result, String::new(), fuel)),
+        // `exit(0)` and returning 0 from main are both a clean exit.
+        Err(error) => match error.downcast_ref::<I32Exit>() {
+            Some(I32Exit(0)) => Ok((result, String::new(), fuel)),
+            Some(I32Exit(status)) => Err(RunnerError::RuntimeError {
+                message: format!("The program exited with status {status}."),
+            }),
+            None => Err(map_interrupt(error.into(), timeout_message, |error| {
+                RunnerError::RuntimeError {
+                    message: error.root_cause().to_string(),
+                }
+            })),
+        },
     }
 }
 
@@ -526,6 +600,34 @@ mod tests {
             restore_fuel_after_bonus(u64::MAX - 5, u64::MAX - 2, 100),
             u64::MAX - 5
         );
+    }
+
+    #[test]
+    fn long_program_output_is_shortened_after_judging() {
+        let program = Test {
+            id: 0,
+            index: 0,
+            max_fuel: None,
+            input: WasmFunctionCall::program(""),
+            expected_output: FunctionValue::String(ContainerVariant::Single("x".into())),
+        };
+        let long = "é".repeat(MAX_RETURNED_PROGRAM_OUTPUT);
+        let (result, _) = finish_test(
+            program,
+            None,
+            Ok((
+                FunctionValue::String(ContainerVariant::Single(long)),
+                String::new(),
+                1,
+            )),
+        )
+        .unwrap();
+        assert!(!result.success);
+        let Some(FunctionValue::String(ContainerVariant::Single(shown))) = result.output else {
+            panic!("program output is a string");
+        };
+        assert!(shown.len() <= MAX_RETURNED_PROGRAM_OUTPUT + 32);
+        assert!(shown.ends_with("[output truncated]"));
     }
 
     #[test]

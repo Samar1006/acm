@@ -1,6 +1,6 @@
 import useSWR from "swr";
 import { api_url, fetcher } from "../../utils/fetcher";
-import { FunctionValue, WasmFunctionCall } from "./submission/tests";
+import { FunctionValue, programInput, WasmFunctionCall } from "./submission/tests";
 
 export type Example = {
     index: number;
@@ -49,16 +49,28 @@ export default function Examples({ id }: { id: number }): JSX.Element | null {
 
     return (
         <section className="mt-6 flex flex-col gap-4" aria-label="Examples">
-            {data.examples.map((example, i) => (
-                <div key={example.index}>
-                    <h3 className="font-bold mb-1">Example {i + 1}</h3>
-                    <div className="rounded-md bg-neutral-100 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 p-3 flex flex-col gap-1 overflow-x-auto">
-                        <div><b>Input:</b> <code className="break-words">{formatInput(example.input, data.parameter_names)}</code></div>
-                        <div><b>Output:</b> <code className="break-words">{formatValue(example.expected_output)}</code></div>
-                        {example.explanation && <div><b>Explanation:</b> {example.explanation}</div>}
+            {data.examples.map((example, i) => {
+                const stdin = programInput(example.input);
+                const output = example.expected_output;
+                const stdout = "String" in output && "Single" in output.String ? output.String.Single : "";
+                return (
+                    <div key={example.index}>
+                        <h3 className="font-bold mb-1">Example {i + 1}</h3>
+                        <div className="rounded-md bg-neutral-100 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 p-3 flex flex-col gap-1 overflow-x-auto">
+                            {stdin !== undefined
+                                ? <div className="grid sm:grid-cols-2 gap-3">
+                                    <div><b>Input</b><pre className="mt-1 font-mono text-sm">{stdin}</pre></div>
+                                    <div><b>Output</b><pre className="mt-1 font-mono text-sm">{stdout}</pre></div>
+                                </div>
+                                : <>
+                                    <div><b>Input:</b> <code className="break-words">{formatInput(example.input, data.parameter_names)}</code></div>
+                                    <div><b>Output:</b> <code className="break-words">{formatValue(example.expected_output)}</code></div>
+                                </>}
+                            {example.explanation && <div><b>Explanation:</b> {example.explanation}</div>}
+                        </div>
                     </div>
-                </div>
-            ))}
+                );
+            })}
         </section>
     );
 }
