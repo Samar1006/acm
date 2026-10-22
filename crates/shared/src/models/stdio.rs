@@ -5,8 +5,9 @@ pub const TOLERANCE: f64 = 1e-6;
 
 /// Whether `actual` is an accepted answer for `expected`, as contest judges
 /// compare them: whitespace only separates tokens, and every token must match.
-/// A decimal expected token such as `2.075` also accepts any number within
-/// [`TOLERANCE`]. Other tokens, integers included, must match exactly.
+/// Two numbers are compared within [`TOLERANCE`] when either is written as a
+/// decimal, so `4` and `4.000000` match. Two integers, and every other token,
+/// must match exactly.
 pub fn outputs_match(expected: &str, actual: &str) -> bool {
     let mut expected = expected.split_whitespace();
     let mut actual = actual.split_whitespace();
@@ -23,7 +24,7 @@ fn tokens_match(expected: &str, actual: &str) -> bool {
     if expected == actual {
         return true;
     }
-    if !is_decimal(expected) {
+    if !is_decimal(expected) && !is_decimal(actual) {
         return false;
     }
     match (expected.parse::<f64>(), actual.parse::<f64>()) {
@@ -65,10 +66,17 @@ mod tests {
     }
 
     #[test]
+    fn decimal_output_matches_an_integer_answer() {
+        assert!(outputs_match("4\n", "4.000000000000000000000000000000000000000"));
+        assert!(outputs_match("1", "0.9999999999"));
+        assert!(!outputs_match("1", "1.01"));
+    }
+
+    #[test]
     fn integer_answers_must_match_exactly() {
         assert!(outputs_match("1000000000", "1000000000"));
-        assert!(!outputs_match("1000000000", "1000000000.0"));
-        assert!(!outputs_match("-1", "-1.0000001"));
+        assert!(!outputs_match("1000000000000000000", "1000000000000000001"));
         assert!(!outputs_match("5", "05"));
+        assert!(!outputs_match("5", "6"));
     }
 }
