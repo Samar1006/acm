@@ -119,6 +119,9 @@ pub struct JobStatus {
     error: Option<String>,
 }
 
+// async-trait marks the boxed futures it generates `#[must_use]`, which Rust 1.99's
+// clippy flags as redundant.
+#[allow(clippy::double_must_use)]
 #[async_trait]
 pub trait Queueable: Send + Sync {
     // Executes the job

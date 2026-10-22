@@ -65,6 +65,9 @@ impl WasmRuntime {
     }
 }
 
+// async-trait marks the boxed futures it generates `#[must_use]`, which Rust 1.99's
+// clippy flags as redundant.
+#[allow(clippy::double_must_use)]
 #[async_trait]
 pub trait Runner {
     async fn run_tests(
