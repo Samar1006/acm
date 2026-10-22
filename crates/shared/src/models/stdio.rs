@@ -67,7 +67,10 @@ mod tests {
 
     #[test]
     fn decimal_output_matches_an_integer_answer() {
-        assert!(outputs_match("4\n", "4.000000000000000000000000000000000000000"));
+        assert!(outputs_match(
+            "4\n",
+            "4.000000000000000000000000000000000000000"
+        ));
         assert!(outputs_match("1", "0.9999999999"));
         assert!(!outputs_match("1", "1.01"));
     }
