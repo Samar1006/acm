@@ -260,8 +260,26 @@ impl Runner for CPlusPlus {
     }
 }
 
+const DEFAULT_HEADER: &str = include_str!("default_header.h");
+
+/// Lines the default header adds before the submitted code.
+const HEADER_LINES: usize = count_lines(DEFAULT_HEADER);
+
+const fn count_lines(text: &str) -> usize {
+    let bytes = text.as_bytes();
+    let mut lines = 0;
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'\n' {
+            lines += 1;
+        }
+        i += 1;
+    }
+    lines
+}
+
 pub(super) fn process_file(file: &str) -> String {
-    let bits_cpp = include_str!("default_header.h");
+    let bits_cpp = DEFAULT_HEADER;
 
     let mut new_file = String::new();
 
@@ -287,7 +305,7 @@ fn is_bits_stdcpp_include(line: &str) -> bool {
     let Some(rest) = rest.trim_start().strip_prefix("include") else {
         return false;
     };
-    rest.trim() == "<bits/stdc++.h>"
+    matches!(rest.trim(), "<bits/stdc++.h>" | "\"bits/stdc++.h\"")
 }
 
 /// What a C++ source is compiled into.
@@ -399,6 +417,8 @@ pub(super) async fn compile_problem(
         .args([
             "-O3",
             "-Wl,--demangle",
+            // Without it, printing a long double aborts the program.
+            "-lc-printscan-long-double",
             "-msimd128",
             "-Wall",
             "-Wextra",
@@ -645,13 +665,13 @@ fn diagnostic_from_str(s: &str) -> Result<Option<Diagnostic>, RunnerError> {
         }
     }
 
-    // this number comes from the length of the "default_header.h" file
+    // Lines inside the default header are not the student's.
     let mut line = parse_number(&mut iter);
-    if line < 39 {
+    if line <= HEADER_LINES {
         return Ok(None);
     }
 
-    line -= 39;
+    line -= HEADER_LINES;
 
     let col = parse_number(&mut iter);
 
@@ -749,10 +769,11 @@ mod tests {
     #[test]
     fn bits_stdcpp_includes_are_blanked_without_moving_lines() {
         let header_lines = include_str!("default_header.h").lines().count();
-        let source = "#include <bits/stdc++.h>\n  #  include<bits/stdc++.h>  \nint main() {}\n";
+        let source = "#include <bits/stdc++.h>\n  #  include<bits/stdc++.h>  \n#include \"bits/stdc++.h\"\nint main() {}\n";
         let processed = process_file(source);
         let lines: Vec<&str> = processed.lines().skip(header_lines).collect();
-        assert_eq!(lines, ["", "", "int main() {}"]);
+        assert_eq!(lines, ["", "", "", "int main() {}"]);
+        assert_eq!(header_lines, HEADER_LINES);
         assert!(process_file("#include <vector>\n").ends_with("#include <vector>\n"));
         assert!(
             process_file("// #include <bits/stdc++.h>").ends_with("// #include <bits/stdc++.h>")
@@ -795,9 +816,10 @@ mod tests {
                 DiagnosticType::Error
             ));
         }
-        let diagnostic = diagnostic_from_str(
-            "/tmp/acm/job/implementation.cpp:40:1: fatal error: Permission denied",
-        )
+        let diagnostic = diagnostic_from_str(&format!(
+            "/tmp/acm/job/implementation.cpp:{}:1: fatal error: Permission denied",
+            HEADER_LINES + 1
+        ))
         .unwrap()
         .unwrap();
         assert!(matches!(diagnostic.diagnostic_type, DiagnosticType::Error));
@@ -806,7 +828,7 @@ mod tests {
     #[test]
     fn mixed_compiler_diagnostics_keep_linker_errors() {
         let RunnerError::CompilationError { diagnostics } = parse_cplusplus_error(
-            "/tmp/job/implementation.cpp:40:1: warning: unused variable\nwasm-ld: error: undefined symbol: missing\nclang++: error: linker command failed".into(), false,
+            format!("/tmp/job/implementation.cpp:{}:1: warning: unused variable\nwasm-ld: error: undefined symbol: missing\nclang++: error: linker command failed", HEADER_LINES + 1), false,
         ) else { panic!("expected compiler diagnostics") };
         assert_eq!(diagnostics.len(), 3);
         assert_eq!(diagnostics[0].line, 1);
