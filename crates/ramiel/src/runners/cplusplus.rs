@@ -357,7 +357,7 @@ pub(super) async fn compile_problem(
     let marker_filename = prefix.join(".compile-cache-key");
     let cache_key = match build {
         Build::Functions => CACHE_VERSION.to_string(),
-        Build::Program => format!("{CACHE_VERSION}-program"),
+        Build::Program => format!("{CACHE_VERSION}-program-stack128m"),
     };
 
     if cache_matches(
@@ -412,7 +412,9 @@ pub(super) async fn compile_problem(
         .kill_on_drop(true)
         .args(match build {
             Build::Functions => &["-Wl,--no-entry", "-Wl,--export-all", "-mexec-model=reactor"][..],
-            Build::Program => &[][..],
+            // Contest programs often recurse once per input element, as deep as the
+            // input is long; wasm-ld's default stack is only 64 KiB.
+            Build::Program => &["-Wl,-z,stack-size=134217728"][..],
         })
         .args([
             "-O3",
